@@ -1,12 +1,14 @@
 import * as d3 from "d3";
 import { Graph, Node, Edge } from "./graph";
 import { DragHandler, ClickHandler, HoldHandler } from "./event_handlers";
+import { GraphController } from "./controller";
 
 export class MouseEventManager {
   // 常量
   private readonly HOLD_THRESHOLD = 300; // 按住判定阈值（毫秒）
 
   // 初始化常量
+  private controller: GraphController;
   private graph: Graph;
   private container: SVGSVGElement;
   private dragHandler: DragHandler;
@@ -18,12 +20,13 @@ export class MouseEventManager {
   private mouseDownStartTime: number = 0; // 记录鼠标按下的时间
   private startNode: Node | null = null; // 记录鼠标按下时的节点
 
-  constructor(graph: Graph, container: SVGSVGElement) {
-    this.graph = graph;
-    this.container = container;
-    this.dragHandler = new DragHandler(graph, container);
-    this.clickHandler = new ClickHandler(graph, container);
-    this.holdHandler = new HoldHandler(graph, container);
+  constructor(controller: GraphController) {
+    this.controller = controller;
+    this.graph = controller.getGraph();
+    this.container = controller.getSVG();
+    this.dragHandler = new DragHandler(controller);
+    this.clickHandler = new ClickHandler(controller);
+    this.holdHandler = new HoldHandler(controller);
 
     this.container.addEventListener("mousedown", (event: MouseEvent) => this.onMouseDown(event));
     this.container.addEventListener("mousemove", (event: MouseEvent) => this.onMouseMove(event));
@@ -44,8 +47,7 @@ export class MouseEventManager {
     if (!this.isMouseDown) return;
     if (Date.now() - this.mouseDownStartTime < this.HOLD_THRESHOLD) return;
 
-    if (this.startNode) this.dragHandler.onDragging(event, this.startNode);
-    else
+    if (!this.startNode)
       this.holdHandler.onHolding(
         event,
         this.findNodeUnderCursor(event),
@@ -66,9 +68,6 @@ export class MouseEventManager {
         this.findEdgeUnderCursor(event)
       );
       console.log("click", event); // FIXME
-    } else if (this.startNode) {
-      this.dragHandler.onDragEnd(event, this.startNode, this.findNodeUnderCursor(event), 1);
-      console.log("dragend", event); // FIXME
     }
 
     this.isMouseDown = false;
@@ -77,16 +76,25 @@ export class MouseEventManager {
     console.log("clickDuration", clickDuration); // FIXME
   }
 
-  // // 获取鼠标移动距离（用于判定拖拽）
-  // private getMouseMovementDistance(event: MouseEvent): number {
-  //   const movementX = event.movementX || 0;
-  //   const movementY = event.movementY || 0;
-  //   return Math.sqrt(movementX ** 2 + movementY ** 2);
-  // }
+  onDragEnd(event: d3.D3DragEvent<SVGCircleElement, Node, Node>, startNode: Node) {
+    this.dragHandler.onDragEnd(event, startNode, this.findNodeUnderPlace(event.x, event.y), 1);
+    console.log("dragend", event); // FIXME
+  }
 
   private findNodeUnderCursor(event: MouseEvent): Node | null {
     const nodes = this.graph.getNodes();
     const [x, y] = d3.pointer(event, this.container);
+    for (let node of nodes) {
+      const distance = Math.sqrt(Math.pow(node.x - x, 2) + Math.pow(node.y - y, 2));
+      if (distance < node.radius) {
+        return node;
+      }
+    }
+    return null;
+  }
+
+  private findNodeUnderPlace(x: number, y: number): Node | null {
+    const nodes = this.graph.getNodes();
     for (let node of nodes) {
       const distance = Math.sqrt(Math.pow(node.x - x, 2) + Math.pow(node.y - y, 2));
       if (distance < node.radius) {

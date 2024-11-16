@@ -1,7 +1,5 @@
 import { Graph, Node, Edge } from "./graph";
-import { DragHandler, ClickHandler, HoldHandler } from "./event_handlers";
 import { ForceSimulation } from "./force";
-import { Renderer } from "./render";
 import { MouseEventManager } from "./event_manager";
 
 import * as d3 from "d3";
@@ -9,37 +7,19 @@ import * as d3 from "d3";
 export class GraphController {
   private svg: SVGSVGElement;
   private graph: Graph;
-  private renderer: Renderer;
+
   private forceSimulation: ForceSimulation;
   private eventManager: MouseEventManager;
 
-  constructor(containerId: string) {
+  constructor(svg: SVGSVGElement) {
     // 初始化
-    this.svg = d3
-      .select(`#${containerId}`)
-      .append("svg")
-      .attr("width", "100%")
-      .attr("height", "100%")
-      .style("background-color", "#f9f9f9")
-      .node() as SVGSVGElement;
+    this.svg = d3.select(svg).style("background-color", "#f9f9f9").node() as SVGSVGElement;
     this.graph = new Graph();
-    this.renderer = new Renderer(this.graph, this.svg);
-    this.forceSimulation = new ForceSimulation(this.graph);
-    this.eventManager = new MouseEventManager(this.graph, this.svg);
 
-    d3.select(this.svg).on("mousedown", () => this.update());
-    d3.select(this.svg).on("mousemove", () => this.update());
-    d3.select(this.svg).on("mouseup", () => this.update());
+    this.forceSimulation = new ForceSimulation(this);
+    this.forceSimulation.applyDragBehavior(d3.select(this.svg).selectAll("circle"));
 
-    this.update();
-  }
-
-  bindEvents(containerId: string): void {
-
-
-  private update(): void {
-    this.forceSimulation.update();
-    this.renderer.render();
+    this.eventManager = new MouseEventManager(this);
   }
 
   public getGraph(): Graph {
@@ -48,5 +28,30 @@ export class GraphController {
 
   public getSVG(): SVGSVGElement {
     return this.svg;
+  }
+
+  public EventManager(): MouseEventManager {
+    return this.eventManager;
+  }
+
+  public addNode(node: Node): number {
+    const id = this.graph.addNode(node);
+    this.forceSimulation.addNode(node);
+    return id;
+  }
+
+  public addEdge(edge: Edge): void {
+    this.graph.addEdge(edge);
+    this.forceSimulation.addEdge(edge);
+  }
+
+  public removeNode(node: Node): void {
+    this.graph.removeNode(node.id);
+    this.forceSimulation.removeNode(node.id);
+  }
+
+  public removeEdge(edge: Edge): void {
+    this.graph.removeEdge(edge);
+    this.forceSimulation.removeEdge(edge);
   }
 }
