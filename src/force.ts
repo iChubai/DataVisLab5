@@ -41,8 +41,8 @@ export class ForceSimulation {
         d3.forceCenter(this.width / 2, this.height / 2) // 指向中心的力
       )
       .force("x", d3.forceX(this.width / 2).strength(0.1)) // X轴方向力
-      .force("y", d3.forceY(this.height / 2).strength(0.1))
-      .force("drag", this.createDragForce(0.02)); // Y轴方向力
+      .force("y", d3.forceY(this.height / 2).strength(0.1)) // Y轴方向力
+      .force("drag", this.createDragForce(0.02));
 
     // Tick 更新逻辑
     this.simulation.on("tick", () => {
@@ -139,6 +139,7 @@ export class ForceSimulation {
     (this.simulation.force("link") as d3.ForceLink<Node, Edge>).links(links);
     this.simulation.alpha(1).restart();
   }
+
   // 创建拖拽力. strengh 表示力度系数
   private createDragForce(strength: number = 0.1): d3.Force<Node, Edge> {
     return () => {
@@ -146,11 +147,10 @@ export class ForceSimulation {
         // 计算鼠标与节点之间的距离和方向
         const dx = this.dragTarget.x - this.draggedNode.x;
         const dy = this.dragTarget.y - this.draggedNode.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
 
         // 施加拖拽力，大小正比于距离
-        this.draggedNode.vx += (dx / distance) * distance * strength;
-        this.draggedNode.vy += (dy / distance) * distance * strength;
+        this.draggedNode.vx += dx * strength;
+        this.draggedNode.vy += dy * strength;
       }
     };
   }

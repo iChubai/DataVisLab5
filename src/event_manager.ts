@@ -39,7 +39,8 @@ export class MouseEventManager {
     this.mouseDownStartTime = Date.now();
     this.startNode = this.findNodeUnderCursor(event);
 
-    console.log("mousedown", event); // FIXME
+    // console.log("mousedown", event); // FIXME
+    console.log(this.controller.getGraph().toString()); // FIXME
   }
 
   // 鼠标移动事件处理
@@ -54,7 +55,8 @@ export class MouseEventManager {
         this.findEdgeUnderCursor(event)
       );
 
-    console.log("mousemove", event); // FIXME
+    // console.log("mousemove", event); // FIXME
+    console.log(this.controller.getGraph().toString()); // FIXME
   }
 
   // 鼠标松开事件处理
@@ -67,18 +69,20 @@ export class MouseEventManager {
         this.findNodeUnderCursor(event),
         this.findEdgeUnderCursor(event)
       );
-      console.log("click", event); // FIXME
+      // console.log("click", event); // FIXME
     }
 
     this.isMouseDown = false;
 
-    console.log("mouseup", event); // FIXME
-    console.log("clickDuration", clickDuration); // FIXME
+    // console.log("mouseup", event); // FIXME
+    // console.log("clickDuration", clickDuration); // FIXME
+    console.log(this.controller.getGraph().toString()); // FIXME
   }
 
   onDragEnd(event: d3.D3DragEvent<SVGCircleElement, Node, Node>, startNode: Node) {
     this.dragHandler.onDragEnd(event, startNode, this.findNodeUnderPlace(event.x, event.y), 1);
-    console.log("dragend", event); // FIXME
+    // console.log("dragend", event); // FIXME
+    console.log(this.controller.getGraph().toString()); // FIXME
   }
 
   private findNodeUnderCursor(event: MouseEvent): Node | null {
