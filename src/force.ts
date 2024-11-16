@@ -15,6 +15,10 @@ export class ForceSimulation {
     this.width = this.controller.getSVG().clientWidth;
     this.height = this.controller.getSVG().clientHeight;
 
+    const svg = d3.select(this.controller.getSVG());
+    svg.append("g").attr("class", "edges"); // 用于存放边
+    svg.append("g").attr("class", "nodes"); // 用于存放节点
+
     const nodes = this.controller.getGraph().getNodes();
     const edges = this.controller
       .getGraph()
@@ -46,15 +50,15 @@ export class ForceSimulation {
 
     // Tick 更新逻辑
     this.simulation.on("tick", () => {
-      this.updatePositions();
       this.updateEdges();
       this.updateNodes();
+      this.updatePositions();
     });
   }
 
   private updateNodes(): void {
-    const node = d3
-      .select(this.controller.getSVG())
+    const nodeGroup = d3.select(this.controller.getSVG()).select(".nodes");
+    const node = nodeGroup
       .selectAll<SVGCircleElement, Node>("circle")
       .data(this.controller.getGraph().getNodes(), (d: Node) => d.id);
 
@@ -73,8 +77,8 @@ export class ForceSimulation {
   }
 
   private updateEdges(): void {
-    const link = d3
-      .select(this.controller.getSVG())
+    const edgeGroup = d3.select(this.controller.getSVG()).select(".edges");
+    const link = edgeGroup
       .selectAll<SVGLineElement, Edge>("line")
       .data(this.controller.getGraph().getEdges(), (d: Edge) => `${d.source}-${d.target}`);
 
