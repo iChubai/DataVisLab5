@@ -78,6 +78,43 @@ export class ForceSimulation {
 
   private updateEdges(): void {
     const edgeGroup = d3.select(this.controller.getSVG()).select(".edges");
+
+    // 边检测区域（透明路径）
+    const edgePath = edgeGroup
+      .selectAll<SVGPathElement, Edge>("path")
+      .data(this.controller.getGraph().getEdges(), (d: Edge) => `${d.source}-${d.target}`);
+
+    // 透明路径进入
+    edgePath
+      .enter()
+      .append("path")
+      .attr("fill", "none")
+      .attr("stroke", "transparent") // 透明的检测区域
+      .attr("stroke-width", 10) // 设置宽度，形成胶囊形区域
+      .on("mouseover", (event, edge) => {
+        // 鼠标悬停事件
+        d3.select(event.target).attr("stroke", "lightblue"); // 显示高亮
+        console.log("Mouseover on edge:", edge);
+      })
+      .on("mouseout", (event, edge) => {
+        // 鼠标移出事件
+        d3.select(event.target).attr("stroke", "transparent"); // 恢复透明
+      });
+
+    // 更新路径位置
+    edgePath.attr("d", (d) => {
+      const source = this.controller.getGraph().getNodeById(d.source);
+      const target = this.controller.getGraph().getNodeById(d.target);
+      if (source && target) {
+        return `M ${source.x},${source.y} L ${target.x},${target.y}`;
+      }
+      return null;
+    });
+
+    // 移除多余路径
+    edgePath.exit().remove();
+
+    // 真实的线条渲染
     const link = edgeGroup
       .selectAll<SVGLineElement, Edge>("line")
       .data(this.controller.getGraph().getEdges(), (d: Edge) => `${d.source}-${d.target}`);

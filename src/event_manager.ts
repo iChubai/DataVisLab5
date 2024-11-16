@@ -109,24 +109,28 @@ export class MouseEventManager {
   }
 
   private findEdgeUnderCursor(event: MouseEvent): Edge | null {
-    const edges = this.graph.getEdges();
-    const [x, y] = d3.pointer(event, this.container);
-    for (let edge of edges) {
-      const sourceNode = this.graph.getNodeById(edge.source);
-      const targetNode = this.graph.getNodeById(edge.target);
-      // 如果鼠标到两个端点的连线距离小于阈值, 则判定为该边
-      if (sourceNode && targetNode) {
-        const distance = Math.sqrt(
-          Math.pow(sourceNode.x - x, 2) +
-            Math.pow(sourceNode.y - y, 2) +
-            Math.pow(targetNode.x - x, 2) +
-            Math.pow(targetNode.y - y, 2)
-        );
-        if (distance < 5) {
-          return edge;
+    const [x, y] = d3.pointer(event, this.container); // 获取鼠标位置
+    let foundEdge: Edge | null = null;
+
+    // 遍历所有的检测路径
+    d3.select(this.controller.getSVG())
+      .select(".edges")
+      .selectAll<SVGPathElement, Edge>("path")
+      .each(function (edge) {
+        const pathElement = this as SVGPathElement;
+
+        // 使用 getTotalLength 和 getPointAtLength 检测鼠标是否靠近路径
+        const totalLength = pathElement.getTotalLength();
+        for (let i = 0; i <= totalLength; i += 1) {
+          const point = pathElement.getPointAtLength(i); // 获取路径上的点
+          const distance = Math.sqrt(Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2));
+          if (distance < 5) {
+            foundEdge = edge; // 找到边
+            return; // 停止循环
+          }
         }
-      }
-    }
-    return null;
+      });
+
+    return foundEdge;
   }
 }
