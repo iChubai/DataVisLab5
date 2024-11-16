@@ -1,0 +1,13 @@
+import { Graph, createDefaultNode, createDefaultEdge } from "./graph.js";
+import { GraphController } from "./controller.js";
+import { c } from "vite/dist/node/types.d-aGj9QkWt.js";
+
+// 初始化图和 SVG 渲染
+const controller: GraphController = new GraphController("graphCanvas");
+const svg: SVGElement = controller.getSVG();
+const graph: Graph = controller.getGraph();
+
+// 添加测试节点和边
+const nodeId1 = graph.addNode(createDefaultNode("Node 1"));
+const nodeId2 = graph.addNode(createDefaultNode("Node 2"));
+graph.addEdge(createDefaultEdge(nodeId1, nodeId2));
