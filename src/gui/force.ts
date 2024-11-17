@@ -1,13 +1,14 @@
 import * as d3 from "d3";
-import { Graph, Node, Edge } from "./graph";
-import { GraphController } from "./controller";
+import { Graph, Node, Edge } from "../infrastructure/graph";
+import { GUIController } from "./controller";
 
 /**
  * 力学仿真类，用于处理节点和边的力学模拟与更新。
+ * 同时也负责渲染。
  */
-export class ForceSimulation {
+export class ForceSimulator {
   private simulation: d3.Simulation<Node, Edge>; // D3 力学仿真对象
-  private controller: GraphController; // 图形控制器实例
+  private controller: GUIController; // 图形控制器实例
   private width: number; // SVG 宽度
   private height: number; // SVG 高度
   private draggedNode: Node | null = null; // 当前拖拽的节点
@@ -15,9 +16,9 @@ export class ForceSimulation {
 
   /**
    * 构造函数，初始化力学仿真。
-   * @param {GraphController} controller - 图形控制器实例。
+   * @param {GUIController} controller - 图形控制器实例。
    */
-  constructor(controller: GraphController) {
+  constructor(controller: GUIController) {
     this.controller = controller;
     this.width = this.controller.getSVG().clientWidth;
     this.height = this.controller.getSVG().clientHeight;
@@ -57,6 +58,19 @@ export class ForceSimulation {
       this.updateEdges();
       this.updateNodes();
       this.updatePositions();
+    });
+
+    this.controller.onNodeAdded((node: Node) => {
+      this.whenNodeAdded(node);
+    });
+    this.controller.onEdgeAdded((edge: Edge) => {
+      this.whenEdgeAdded(edge);
+    });
+    this.controller.onNodeRemoved((node: Node) => {
+      this.whenNodeRemoved(node);
+    });
+    this.controller.onEdgeRemoved((edge: Edge) => {
+      this.whenEdgeRemoved(edge);
     });
   }
 
@@ -153,7 +167,7 @@ export class ForceSimulation {
    * 添加节点时更新仿真。
    * @param {Node} node - 要添加的节点。
    */
-  public addNode(node: Node): void {
+  public whenNodeAdded(node: Node): void {
     this.simulation.nodes(this.controller.getGraph().getNodes());
     this.simulation.alpha(1).restart();
   }
@@ -162,7 +176,7 @@ export class ForceSimulation {
    * 添加边时更新仿真。
    * @param {Edge} edge - 要添加的边。
    */
-  public addEdge(edge: Edge): void {
+  public whenEdgeAdded(edge: Edge): void {
     const links = this.controller
       .getGraph()
       .getEdges()
@@ -177,9 +191,9 @@ export class ForceSimulation {
 
   /**
    * 删除节点时更新仿真。
-   * @param {number} nodeId - 要删除的节点 ID。
+   * @param {Node} node - 要删除的节点 ID。
    */
-  public removeNode(nodeId: number): void {
+  public whenNodeRemoved(node: Node): void {
     this.simulation.nodes(this.controller.getGraph().getNodes());
     this.simulation.alpha(1).restart();
   }
@@ -188,7 +202,7 @@ export class ForceSimulation {
    * 删除边时更新仿真。
    * @param {Edge} edge - 要删除的边。
    */
-  public removeEdge(edge: Edge): void {
+  public whenEdgeRemoved(edge: Edge): void {
     const links = this.controller
       .getGraph()
       .getEdges()
@@ -245,7 +259,7 @@ export class ForceSimulation {
   }
 
   private dragEnded(event: d3.D3DragEvent<SVGCircleElement, Node, Node>): void {
-    if (this.draggedNode) this.controller.EventManager().onDragEnd(event, this.draggedNode);
+    if (this.draggedNode) this.controller.getEventManager().onDragEnd(event, this.draggedNode);
     this.draggedNode = null;
     this.dragTarget = null;
     this.simulation.alphaTarget(0);

@@ -1,7 +1,7 @@
 import * as d3 from "d3";
-import { Graph, Node, Edge } from "./graph";
+import { Graph, Node, Edge } from "../infrastructure/graph";
 import { DragHandler, ClickHandler, HoldHandler } from "./event_handlers";
-import { GraphController } from "./controller";
+import { GUIController } from "./controller";
 
 /**
  * 鼠标事件管理器，负责处理与鼠标相关的操作，包括点击、拖拽和按住操作。
@@ -9,7 +9,7 @@ import { GraphController } from "./controller";
 export class MouseEventManager {
   private readonly HOLD_THRESHOLD = 300; // 按住判定阈值（毫秒）
 
-  private controller: GraphController; // 图形控制器实例
+  private controller: GUIController; // 图形控制器实例
   private graph: Graph; // 图数据结构
   private container: SVGSVGElement; // SVG 容器
   private dragHandler: DragHandler; // 拖拽处理器
@@ -22,9 +22,9 @@ export class MouseEventManager {
 
   /**
    * 构造函数，初始化鼠标事件管理器。
-   * @param {GraphController} controller - 图形控制器实例。
+   * @param {GUIController} controller - 图形控制器实例。
    */
-  constructor(controller: GraphController) {
+  constructor(controller: GUIController) {
     this.controller = controller;
     this.graph = controller.getGraph();
     this.container = controller.getSVG();

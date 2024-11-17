@@ -5,7 +5,7 @@ const NODE_DEFAULT_RADIUS = 20; // 节点的默认半径
  * 节点接口，描述节点的属性。
  */
 export interface Node {
-  id: number; // 节点唯一标识符
+  id: string; // 节点唯一标识符
   x: number; // 节点的 x 坐标
   y: number; // 节点的 y 坐标
   vx: number; // 节点的 x 方向速度
@@ -18,19 +18,27 @@ export interface Node {
  * 边接口，描述边的属性。
  */
 export interface Edge {
-  source: number; // 边的起点节点 ID
-  target: number; // 边的终点节点 ID
-  info: number; // 边的权重或附加信息
+  id: string;
+  source: string; // 边的起点节点 ID
+  target: string; // 边的终点节点 ID
+  info: string; // 边的权重或附加信息
 }
+
+export type GraphEventCallback<T extends Node | Edge> = (data: T) => void;
 
 /**
  * 图类，用于管理图的节点和边数据。
  */
 export class Graph {
-  private nodes: Map<number, Node>; // 存储节点的映射表
+  private nodes: Map<string, Node>; // 存储节点的映射表
   private edges: Map<string, Edge>; // 存储边的映射表，键格式为 "source-target"
-  private adjacencyList: Map<number, { inEdges: Set<number>; outEdges: Set<number> }>; // 邻接表
+  private adjacencyList: Map<string, { inEdges: Set<string>; outEdges: Set<string> }>; // 邻接表
   private nodeIndex: number; // 节点索引计数器
+
+  private nodeAddedCallbacks: Array<GraphEventCallback<Node>>;
+  private nodeRemovedCallbacks: Array<GraphEventCallback<Node>>;
+  private edgeAddedCallbacks: Array<GraphEventCallback<Edge>>;
+  private edgeRemovedCallbacks: Array<GraphEventCallback<Edge>>;
 
   /**
    * 构造函数，初始化图的结构。
@@ -40,18 +48,26 @@ export class Graph {
     this.edges = new Map();
     this.adjacencyList = new Map();
     this.nodeIndex = 0;
+
+    this.nodeAddedCallbacks = new Array();
+    this.nodeRemovedCallbacks = new Array();
+    this.edgeAddedCallbacks = new Array();
+    this.edgeRemovedCallbacks = new Array();
   }
 
   /**
    * 添加节点到图中。
    * @param {Node} node - 要添加的节点。
-   * @returns {number} 返回分配给该节点的唯一 ID。
+   * @returns {string} 返回分配给该节点的唯一 ID。
    */
-  addNode(node: Node): number {
-    node.id = this.nodeIndex;
+  addNode(node: Node): string {
+    node.id = `${this.nodeIndex}`;
     this.nodes.set(node.id, node);
     this.adjacencyList.set(node.id, { inEdges: new Set(), outEdges: new Set() });
     this.nodeIndex++;
+
+    this.nodeAddedCallbacks.forEach((callback) => callback(node));
+
     return node.id;
   }
 
@@ -59,7 +75,7 @@ export class Graph {
    * 从图中移除节点。
    * @param {number} nodeId - 要移除的节点 ID。
    */
-  removeNode(nodeId: number): void {
+  removeNode(nodeId: string): void {
     if (!this.nodes.has(nodeId)) return;
 
     if (this.hasNeighbor(nodeId)) {
@@ -69,6 +85,8 @@ export class Graph {
 
     this.nodes.delete(nodeId);
     this.adjacencyList.delete(nodeId);
+
+    this.nodeRemovedCallbacks.forEach((callback) => callback(this.getNodeById(nodeId)!));
   }
 
   /**
@@ -76,12 +94,14 @@ export class Graph {
    * @param {Edge} edge - 要添加的边。
    */
   addEdge(edge: Edge): void {
-    const key = `${edge.source}-${edge.target}`;
+    const key = Graph.getEdgeId(edge.source, edge.target);
     if (this.edges.has(key)) return;
 
     this.edges.set(key, edge);
     this.adjacencyList.get(edge.source)!.outEdges.add(edge.target);
     this.adjacencyList.get(edge.target)!.inEdges.add(edge.source);
+
+    this.edgeAddedCallbacks.forEach((callback) => callback(edge));
   }
 
   /**
@@ -89,12 +109,44 @@ export class Graph {
    * @param {Edge} edge - 要移除的边。
    */
   removeEdge(edge: Edge): void {
-    const key = `${edge.source}-${edge.target}`;
+    const key = Graph.getEdgeId(edge.source, edge.target);
     if (!this.edges.has(key)) return;
 
     this.edges.delete(key);
     this.adjacencyList.get(edge.source)!.outEdges.delete(edge.target);
     this.adjacencyList.get(edge.target)!.inEdges.delete(edge.source);
+
+    this.edgeRemovedCallbacks.forEach((callback) => callback(edge));
+  }
+
+  onNodeAdded(callback: GraphEventCallback<Node>): void {
+    this.nodeAddedCallbacks.push(callback);
+  }
+
+  onNodeRemoved(callback: GraphEventCallback<Node>): void {
+    this.nodeRemovedCallbacks.push(callback);
+  }
+
+  onEdgeAdded(callback: GraphEventCallback<Edge>): void {
+    this.edgeAddedCallbacks.push(callback);
+  }
+
+  onEdgeRemoved(callback: GraphEventCallback<Edge>): void {
+    this.edgeRemovedCallbacks.push(callback);
+  }
+
+  // 通过sourcId和targetId获取边Id
+  static getEdgeId(sourceId: string, targetId: string): string {
+    return `${sourceId}->${targetId}`;
+  }
+
+  // 通过边Id获取sourceId和targetId
+  static getSourceId(edgeId: string): string {
+    return edgeId.split("->")[0];
+  }
+
+  static getTargetId(edgeId: string): string {
+    return edgeId.split("->")[1];
   }
 
   /**
@@ -118,35 +170,16 @@ export class Graph {
    * @param {number} nodeId - 节点 ID。
    * @returns {Node | undefined} 对应的节点对象。
    */
-  getNodeById(nodeId: number): Node | undefined {
+  getNodeById(nodeId: string): Node | undefined {
     return this.nodes.get(nodeId);
   }
 
   /**
-   * 判断节点是否存在。
-   * @param {number} nodeId - 节点 ID。
-   * @returns {boolean} 节点是否存在。
-   */
-  hasNode(nodeId: number): boolean {
-    return this.nodes.has(nodeId);
-  }
-
-  /**
-   * 判断边是否存在。
-   * @param {number} source - 边的起点节点 ID。
-   * @param {number} target - 边的终点节点 ID。
-   * @returns {boolean} 边是否存在。
-   */
-  hasEdge(source: number, target: number): boolean {
-    return this.edges.has(`${source}-${target}`);
-  }
-
-  /**
    * 获取连接到指定节点的源节点数组。
-   * @param {number} nodeId - 节点 ID。
+   * @param {string} nodeId - 节点 ID。
    * @returns {Node[]} 源节点数组。
    */
-  getSourceNodes(nodeId: number): Node[] {
+  getSourceNodes(nodeId: string): Node[] {
     return Array.from(this.adjacencyList.get(nodeId)!.inEdges)
       .map((sourceId) => this.nodes.get(sourceId)!)
       .filter(Boolean);
@@ -154,21 +187,40 @@ export class Graph {
 
   /**
    * 获取从指定节点连接的目标节点数组。
-   * @param {number} nodeId - 节点 ID。
+   * @param {string} nodeId - 节点 ID。
    * @returns {Node[]} 目标节点数组。
    */
-  getTargetNodes(nodeId: number): Node[] {
+  getTargetNodes(nodeId: string): Node[] {
     return Array.from(this.adjacencyList.get(nodeId)!.outEdges)
       .map((targetId) => this.nodes.get(targetId)!)
       .filter(Boolean);
   }
 
   /**
-   * 检查指定节点是否有相邻的源或目标节点。
+   * 判断节点是否存在。
    * @param {number} nodeId - 节点 ID。
+   * @returns {boolean} 节点是否存在。
+   */
+  hasNode(nodeId: string): boolean {
+    return this.nodes.has(nodeId);
+  }
+
+  /**
+   * 判断边是否存在。
+   * @param {string} source - 边的起点节点 ID。
+   * @param {string} target - 边的终点节点 ID。
+   * @returns {boolean} 边是否存在。
+   */
+  hasEdge(source: string, target: string): boolean {
+    return this.edges.has(`${source}-${target}`);
+  }
+
+  /**
+   * 检查指定节点是否有相邻的源或目标节点。
+   * @param {string} nodeId - 节点 ID。
    * @returns {boolean} 是否有相邻节点。
    */
-  hasNeighbor(nodeId: number): boolean {
+  hasNeighbor(nodeId: string): boolean {
     return (
       this.adjacencyList.get(nodeId)!.inEdges.size > 0 ||
       this.adjacencyList.get(nodeId)!.outEdges.size > 0
@@ -200,7 +252,7 @@ export class Graph {
  */
 export function createDefaultNode(info: string): Node {
   return {
-    id: 0,
+    id: "0",
     x: Math.random() * 500,
     y: Math.random() * 500,
     vx: 0,
@@ -217,6 +269,11 @@ export function createDefaultNode(info: string): Node {
  * @param {number} [weight=1] - 边的权重，默认为 1。
  * @returns {Edge} 默认边实例。
  */
-export function createDefaultEdge(sourceId: number, targetId: number, weight: number = 1): Edge {
-  return { source: sourceId, target: targetId, info: weight };
+export function createDefaultEdge(sourceId: string, targetId: string, weight: string = "1"): Edge {
+  return {
+    id: Graph.getEdgeId(sourceId, targetId),
+    source: sourceId,
+    target: targetId,
+    info: weight,
+  };
 }

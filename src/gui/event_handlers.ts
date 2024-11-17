@@ -1,6 +1,6 @@
 import * as d3 from "d3";
-import { Node, Edge, Graph } from "./graph";
-import { GraphController } from "./controller";
+import { Node, Edge, Graph, createDefaultNode, createDefaultEdge } from "../infrastructure/graph";
+import { GUIController } from "./controller";
 
 // 常量
 const FORCE_MULTIPLIER = 0.1; // 力的系数，用于调节拖拽的强度
@@ -9,13 +9,13 @@ const FORCE_MULTIPLIER = 0.1; // 力的系数，用于调节拖拽的强度
  * 拖拽处理器，用于处理节点的拖拽事件。
  */
 export class DragHandler {
-  private controller: GraphController; // 图形控制器实例
+  private controller: GUIController; // 图形控制器实例
 
   /**
    * 构造函数，初始化拖拽处理器。
-   * @param {GraphController} controller - 图形控制器实例。
+   * @param {GUIController} controller - 图形控制器实例。
    */
-  constructor(controller: GraphController) {
+  constructor(controller: GUIController) {
     this.controller = controller;
   }
 
@@ -32,10 +32,8 @@ export class DragHandler {
     targetNode: Node | null,
     info: number
   ): void {
-    if (targetNode && targetNode.id !== node.id) {
-      const newEdge = { source: node.id, target: targetNode.id, info: 1 };
-      this.controller.addEdge(newEdge);
-    }
+    if (targetNode && targetNode.id !== node.id)
+      this.controller.addEdge(createDefaultEdge(node.id, targetNode.id, "1"));
   }
 }
 
@@ -43,13 +41,13 @@ export class DragHandler {
  * 单击处理器，用于处理节点或边的单击事件。
  */
 export class ClickHandler {
-  private controller: GraphController; // 图形控制器实例
+  private controller: GUIController; // 图形控制器实例
 
   /**
    * 构造函数，初始化单击处理器。
-   * @param {GraphController} controller - 图形控制器实例。
+   * @param {GUIController} controller - 图形控制器实例。
    */
-  constructor(controller: GraphController) {
+  constructor(controller: GUIController) {
     this.controller = controller;
   }
 
@@ -69,7 +67,7 @@ export class ClickHandler {
     } else {
       const [x, y] = d3.pointer(event, this.controller.getSVG());
       let id = this.controller.addNode({
-        id: 0,
+        id: "0",
         x: x,
         y: y,
         vx: 0,
@@ -86,13 +84,13 @@ export class ClickHandler {
  * 按住处理器，用于处理节点或边的按住事件。
  */
 export class HoldHandler {
-  private controller: GraphController; // 图形控制器实例
+  private controller: GUIController; // 图形控制器实例
 
   /**
    * 构造函数，初始化按住处理器。
-   * @param {GraphController} controller - 图形控制器实例。
+   * @param {GUIController} controller - 图形控制器实例。
    */
-  constructor(controller: GraphController) {
+  constructor(controller: GUIController) {
     this.controller = controller;
   }
 
