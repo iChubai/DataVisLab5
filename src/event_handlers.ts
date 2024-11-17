@@ -5,15 +5,27 @@ import { GraphController } from "./controller";
 // 常量
 const FORCE_MULTIPLIER = 0.1; // 力的系数，用于调节拖拽的强度
 
-// 定义拖拽处理器
+/**
+ * 拖拽处理器，用于处理节点的拖拽事件。
+ */
 export class DragHandler {
-  private controller: GraphController;
+  private controller: GraphController; // 图形控制器实例
 
+  /**
+   * 构造函数，初始化拖拽处理器。
+   * @param {GraphController} controller - 图形控制器实例。
+   */
   constructor(controller: GraphController) {
     this.controller = controller;
   }
 
-  // 结束拖拽
+  /**
+   * 拖拽结束时的回调函数。
+   * @param {d3.D3DragEvent<SVGCircleElement, Node, Node>} event - D3 拖拽事件对象。
+   * @param {Node} node - 被拖拽的节点对象。
+   * @param {Node | null} targetNode - 拖拽目标的节点（如果有）。
+   * @param {number} info - 额外的信息参数。
+   */
   onDragEnd(
     event: d3.D3DragEvent<SVGCircleElement, Node, Node>,
     node: Node,
@@ -27,14 +39,26 @@ export class DragHandler {
   }
 }
 
-// 定义单击处理器
+/**
+ * 单击处理器，用于处理节点或边的单击事件。
+ */
 export class ClickHandler {
-  private controller: GraphController;
+  private controller: GraphController; // 图形控制器实例
 
+  /**
+   * 构造函数，初始化单击处理器。
+   * @param {GraphController} controller - 图形控制器实例。
+   */
   constructor(controller: GraphController) {
     this.controller = controller;
   }
 
+  /**
+   * 单击事件的回调函数。
+   * @param {MouseEvent} event - 鼠标事件对象。
+   * @param {Node | null} node - 被单击的节点对象（如果有）。
+   * @param {Edge | null} edge - 被单击的边对象（如果有）。
+   */
   onClick(event: MouseEvent, node: Node | null, edge: Edge | null): void {
     if (node) {
       console.log(`Node clicked: ${node.info}`);
@@ -58,14 +82,26 @@ export class ClickHandler {
   }
 }
 
-// 定义按住处理器
+/**
+ * 按住处理器，用于处理节点或边的按住事件。
+ */
 export class HoldHandler {
-  private controller: GraphController;
+  private controller: GraphController; // 图形控制器实例
 
+  /**
+   * 构造函数，初始化按住处理器。
+   * @param {GraphController} controller - 图形控制器实例。
+   */
   constructor(controller: GraphController) {
     this.controller = controller;
   }
 
+  /**
+   * 按住事件的回调函数。
+   * @param {MouseEvent} event - 鼠标事件对象。
+   * @param {Node | null} node - 被按住的节点对象（如果有）。
+   * @param {Edge | null} edge - 被按住的边对象（如果有）。
+   */
   onHolding(event: MouseEvent, node: Node | null, edge: Edge | null): void {
     if (node) {
       this.controller.removeNode(node);

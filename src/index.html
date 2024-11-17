@@ -6,22 +6,31 @@
     <title>Graph Interaction Test</title>
 
     <style>
+      /* 样式定义 */
+
+      /* 为 SVG 元素添加边框 */
       svg {
         border: 1px solid #ccc;
       }
+
+      /* 定义节点样式 */
       .node {
-        fill: steelblue;
-        cursor: pointer;
+        fill: steelblue; /* 填充颜色 */
+        cursor: pointer; /* 鼠标悬停时显示为手形指针 */
       }
+
+      /* 定义边样式 */
       .edge {
-        stroke: black;
-        stroke-width: 2px;
+        stroke: black; /* 边的颜色 */
+        stroke-width: 2px; /* 边的宽度 */
       }
     </style>
   </head>
   <body>
     <h1>Graph Interaction Test</h1>
+    <!-- SVG 画布，用于显示图结构 -->
     <svg id="graphCanvas" width="1000" height="1000"></svg>
   </body>
+  <!-- 引入主模块脚本 -->
   <script src="./main.ts" type="module"></script>
 </html>
