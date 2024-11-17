@@ -196,6 +196,18 @@ export class Graph {
       .filter(Boolean);
   }
 
+  getSourceEdges(nodeId: string): Edge[] {
+    return Array.from(this.adjacencyList.get(nodeId)!.inEdges)
+      .map((sourceId) => this.edges.get(Graph.getEdgeId(sourceId, nodeId))!)
+      .filter(Boolean);
+  }
+
+  getTargetEdges(nodeId: string): Edge[] {
+    return Array.from(this.adjacencyList.get(nodeId)!.outEdges)
+      .map((targetId) => this.edges.get(Graph.getEdgeId(nodeId, targetId))!)
+      .filter(Boolean);
+  }
+
   /**
    * 判断节点是否存在。
    * @param {number} nodeId - 节点 ID。

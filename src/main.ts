@@ -1,6 +1,7 @@
 // main.ts
 
 import { GUIController } from "./gui/controller.js";
+import { SNN } from "./snn/snn.js";
 
 /**
  * 主模块入口，用于初始化图形控制器并绑定到页面上的 SVG 元素。
@@ -14,3 +15,4 @@ if (!svg) {
 
 // 初始化图形控制器
 const controller: GUIController = new GUIController(svg);
+const snn: SNN = new SNN(controller.getGraph());
