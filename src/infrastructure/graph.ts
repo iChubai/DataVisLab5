@@ -1,5 +1,4 @@
-// 定义常量
-const NODE_DEFAULT_RADIUS = 20; // 节点的默认半径
+import { NodeParameterManager, NodeParameter } from "./parameter";
 
 /**
  * 节点接口，描述节点的属性。
@@ -11,7 +10,6 @@ export interface Node {
   vx: number; // 节点的 x 方向速度
   vy: number; // 节点的 y 方向速度
   info: string; // 节点的信息描述
-  radius: number; // 节点的半径
 }
 
 /**
@@ -40,19 +38,36 @@ export class Graph {
   private edgeAddedCallbacks: Array<GraphEventCallback<Edge>>;
   private edgeRemovedCallbacks: Array<GraphEventCallback<Edge>>;
 
+  private nodeParameterManager: NodeParameterManager;
   /**
    * 构造函数，初始化图的结构。
    */
   constructor() {
+    // 基本数据结构，存储基本内容（节点、边、邻接表、索引管理器），应当第一个被初始化
     this.nodes = new Map();
     this.edges = new Map();
     this.adjacencyList = new Map();
     this.nodeIndex = 0;
 
+    // 回调函数数组，有可能被接下来初始化的模块注册，所以要第二个被初始化
     this.nodeAddedCallbacks = new Array();
     this.nodeRemovedCallbacks = new Array();
     this.edgeAddedCallbacks = new Array();
     this.edgeRemovedCallbacks = new Array();
+
+    // 其他附属数据结构，其中可能会注册一些回调，所以要第三个被初始化
+    this.nodeParameterManager = new NodeParameterManager(this);
+
+    // 这里其实相当于一个registerNodeParameter的调用示例，info参数可有可无其实。
+    this.registerNodeParameter({
+      name: "info",
+      type: "string",
+      value: "",
+      isChanganble: true,
+      onChange: (nodeId, newValue) => {
+        this.nodes.get(nodeId)!.info = newValue;
+      },
+    });
   }
 
   /**
@@ -76,6 +91,8 @@ export class Graph {
    * @param {number} nodeId - 要移除的节点 ID。
    */
   removeNode(nodeId: string): void {
+    this.nodeRemovedCallbacks.forEach((callback) => callback(this.getNodeById(nodeId)!)); // 先处理回调，再删除数据。
+
     if (!this.nodes.has(nodeId)) return;
 
     if (this.hasNeighbor(nodeId)) {
@@ -85,8 +102,6 @@ export class Graph {
 
     this.nodes.delete(nodeId);
     this.adjacencyList.delete(nodeId);
-
-    this.nodeRemovedCallbacks.forEach((callback) => callback(this.getNodeById(nodeId)!));
   }
 
   /**
@@ -109,14 +124,14 @@ export class Graph {
    * @param {Edge} edge - 要移除的边。
    */
   removeEdge(edge: Edge): void {
+    this.edgeRemovedCallbacks.forEach((callback) => callback(edge)); // 先处理回调，再删除数据。
+
     const key = Graph.getEdgeId(edge.source, edge.target);
     if (!this.edges.has(key)) return;
 
     this.edges.delete(key);
     this.adjacencyList.get(edge.source)!.outEdges.delete(edge.target);
     this.adjacencyList.get(edge.target)!.inEdges.delete(edge.source);
-
-    this.edgeRemovedCallbacks.forEach((callback) => callback(edge));
   }
 
   onNodeAdded(callback: GraphEventCallback<Node>): void {
@@ -239,6 +254,14 @@ export class Graph {
     );
   }
 
+  getNodeParameterManager(): NodeParameterManager {
+    return this.nodeParameterManager;
+  }
+
+  registerNodeParameter(parameter: NodeParameter): void {
+    this.getNodeParameterManager().register(parameter);
+  }
+
   /**
    * 获取图的字符串表示。
    * @returns {string} 图的概要信息。
@@ -270,7 +293,6 @@ export function createDefaultNode(info: string): Node {
     vx: 0,
     vy: 0,
     info,
-    radius: NODE_DEFAULT_RADIUS,
   };
 }
 

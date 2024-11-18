@@ -3,6 +3,8 @@ import { Graph, Node, Edge } from "../infrastructure/graph";
 import { DragHandler, ClickHandler, HoldHandler } from "./event_handlers";
 import { GUIController } from "./controller";
 
+const NODE_DEFAULT_RADIUS = 20; // 节点的默认半径
+
 /**
  * 鼠标事件管理器，负责处理与鼠标相关的操作，包括点击、拖拽和按住操作。
  */
@@ -42,7 +44,7 @@ export class MouseEventManager {
    * 鼠标按下事件处理。
    * @param {MouseEvent} event - 鼠标事件对象。
    */
-  onMouseDown(event: MouseEvent): void {
+  private onMouseDown(event: MouseEvent): void {
     this.isMouseDown = true;
     this.mouseDownStartTime = Date.now();
     this.startNode = this.findNodeUnderCursor(event);
@@ -52,7 +54,7 @@ export class MouseEventManager {
    * 鼠标移动事件处理。
    * @param {MouseEvent} event - 鼠标事件对象。
    */
-  onMouseMove(event: MouseEvent): void {
+  private onMouseMove(event: MouseEvent): void {
     if (!this.isMouseDown) return;
     if (Date.now() - this.mouseDownStartTime < this.HOLD_THRESHOLD) return;
 
@@ -69,15 +71,15 @@ export class MouseEventManager {
    * 鼠标松开事件处理。
    * @param {MouseEvent} event - 鼠标事件对象。
    */
-  onMouseUp(event: MouseEvent): void {
+  private onMouseUp(event: MouseEvent): void {
     let clickDuration = Date.now() - this.mouseDownStartTime;
 
     if (clickDuration < this.HOLD_THRESHOLD) {
-      this.clickHandler.onClick(
-        event,
-        this.findNodeUnderCursor(event),
-        this.findEdgeUnderCursor(event)
-      );
+      const node = this.findNodeUnderCursor(event);
+      const edge = this.findEdgeUnderCursor(event);
+      this.clickHandler.onClick(event, node, edge);
+
+      console.log("Click: ", node, edge);
     }
 
     this.isMouseDown = false;
@@ -102,7 +104,7 @@ export class MouseEventManager {
     const [x, y] = d3.pointer(event, this.container);
     for (let node of nodes) {
       const distance = Math.sqrt(Math.pow(node.x - x, 2) + Math.pow(node.y - y, 2));
-      if (distance < node.radius) {
+      if (distance < NODE_DEFAULT_RADIUS) {
         return node;
       }
     }
@@ -119,7 +121,7 @@ export class MouseEventManager {
     const nodes = this.graph.getNodes();
     for (let node of nodes) {
       const distance = Math.sqrt(Math.pow(node.x - x, 2) + Math.pow(node.y - y, 2));
-      if (distance < node.radius) {
+      if (distance < NODE_DEFAULT_RADIUS) {
         return node;
       }
     }

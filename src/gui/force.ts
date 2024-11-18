@@ -2,6 +2,9 @@ import * as d3 from "d3";
 import { Graph, Node, Edge } from "../infrastructure/graph";
 import { GUIController } from "./controller";
 
+// 定义常量
+const NODE_DEFAULT_RADIUS = 20; // 节点的默认半径
+
 /**
  * 力学仿真类，用于处理节点和边的力学模拟与更新。
  * 同时也负责渲染。
@@ -87,7 +90,7 @@ export class ForceSimulator {
     node
       .enter()
       .append("circle")
-      .attr("r", (d) => d.radius)
+      .attr("r", (d) => NODE_DEFAULT_RADIUS)
       .attr("fill", (d) => "steelblue")
       .call((enter) => {
         this.applyDragBehavior(enter);
