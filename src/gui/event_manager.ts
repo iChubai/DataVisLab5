@@ -77,12 +77,16 @@ export class MouseEventManager {
     if (clickDuration < this.HOLD_THRESHOLD) {
       const node = this.findNodeUnderCursor(event);
       const edge = this.findEdgeUnderCursor(event);
-      this.clickHandler.onClick(event, node, edge);
 
-      console.log("Click: ", node, edge);
+      this.onMouseClick(event, node, edge);
     }
 
     this.isMouseDown = false;
+  }
+
+  onMouseClick(event: MouseEvent, node: Node | null, edge: Edge | null): void {
+    this.clickHandler.onClick(event, node, edge);
+    console.log("Click: ", node, edge);
   }
 
   /**

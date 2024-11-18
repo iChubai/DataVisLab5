@@ -75,7 +75,6 @@ export class ClickHandler {
         vx: 0,
         vy: 0,
         info: `Node created at node-${Date.now()}`,
-        radius: 20,
       });
       console.log(`New node created: ${id}`);
     }

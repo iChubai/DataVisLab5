@@ -94,6 +94,7 @@ export class ForceSimulator {
       .attr("fill", (d) => "steelblue")
       .call((enter) => {
         this.applyDragBehavior(enter);
+        this.applyClickBehavior(enter);
       });
 
     node.exit().remove();
@@ -266,5 +267,11 @@ export class ForceSimulator {
     this.draggedNode = null;
     this.dragTarget = null;
     this.simulation.alphaTarget(0);
+  }
+
+  private applyClickBehavior(nodeSelection: d3.Selection<SVGCircleElement, Node, any, any>): void {
+    nodeSelection.on("click", (event, node) => {
+      this.controller.getEventManager().onMouseClick(event, node, null);
+    });
   }
 }

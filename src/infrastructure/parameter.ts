@@ -30,7 +30,8 @@ export class NodeParameterManager {
     this.initialParameters = [];
 
     this.graph.onNodeAdded((node) => {
-      this.nodeParameters.set(node.id, this.initialParameters.slice());
+      // this.nodeParameters.set(node.id, this.initialParameters.slice()); 这是浅拷贝，不对。
+      this.nodeParameters.set(node.id, JSON.parse(JSON.stringify(this.initialParameters))); // 这里用深拷贝
       console.log(
         `NodeParameterManager: Node added: ${node.id} with parameters: `,
         this.nodeParameters.get(node.id)

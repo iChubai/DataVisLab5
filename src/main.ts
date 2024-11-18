@@ -16,3 +16,8 @@ if (!svg) {
 // 初始化图形控制器
 const controller: GUIController = new GUIController(svg);
 const snn: SNN = new SNN(controller.getGraph());
+
+document.addEventListener("submit", (e) => {
+  e.preventDefault(); // 阻止默认提交行为
+  console.log("Form submission prevented globally.");
+});

@@ -66,6 +66,7 @@ export class Graph {
       isChanganble: true,
       onChange: (nodeId, newValue) => {
         this.nodes.get(nodeId)!.info = newValue;
+        console.log(`Node ${nodeId} info changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
       },
     });
   }
