@@ -58,19 +58,27 @@ export class NodeParameterManager {
     return this.initialParameters.some((p) => p.name === parameterName);
   }
 
+  // 仅被模拟器调用。
   getValue(nodeId: string, parameterName: string): any {
     const parameters = this.nodeParameters.get(nodeId) || [];
     const parameter = parameters.find((p) => p.name === parameterName);
     return parameter?.value;
   }
 
+  // 仅被模拟器调用。
+  // 参数设置面板内的值变化时，不会调用此函数，而是会直接param.value = newValue;。
+  // 因此**此处不可以调用onChange回调函数**，
+  // 因为onChange是用来向模拟器通知参数改变用的，然而这个消息本身是由模拟器发出的，所以不需要通知。
+  // 反而需要向参数面板通知参数值变化。
   setValue(nodeId: string, parameterName: string, value: any): void {
-    const parameters = this.nodeParameters.get(nodeId) || [];
+    const parameters = this.nodeParameters.get(nodeId);
+    if (parameters === undefined) throw new Error(`NodeParameterManager: Node ${nodeId} unfound.`);
     const parameter = parameters.find((p) => p.name === parameterName);
-    if (parameter) {
-      parameter.value = value;
-      parameter.onChange(nodeId, value);
-    }
+    if (parameter === undefined)
+      throw new Error(
+        `NodeParameterManager: Parameter ${parameterName} unfound in node ${nodeId}.`
+      );
+    parameter.value = value;
   }
 
   /**

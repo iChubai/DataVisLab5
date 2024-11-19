@@ -193,13 +193,6 @@ export class ForceSimulator {
       .force("y", d3.forceY(this.height / 2).strength(0.1))
       .force("drag", this.createDragForce(0.02));
 
-    // Tick 更新逻辑
-    this.simulation.on("tick", () => {
-      this.updateEdges();
-      this.updateNodes();
-      this.updatePositions();
-    });
-
     this.controller.onNodeAdded((nodeId) => {
       this.whenNodeAdded(nodeId);
     });
@@ -211,6 +204,13 @@ export class ForceSimulator {
     });
     this.controller.onEdgeRemoved((edgeId) => {
       this.whenEdgeRemoved(edgeId);
+    });
+
+    // Tick 更新逻辑
+    this.simulation.on("tick", () => {
+      this.updateEdges();
+      this.updateNodes();
+      this.updatePositions();
     });
   }
 
@@ -237,6 +237,15 @@ export class ForceSimulator {
     node.exit().remove();
 
     node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+
+    // 将节点的物理参数实时返回给参数管理器。
+    const nodeParamManager = this.controller.getGraph().getNodeParameterManager();
+    node.each((d) => {
+      nodeParamManager.setValue(d._id, "x", d.x);
+      nodeParamManager.setValue(d._id, "y", d.y);
+      nodeParamManager.setValue(d._id, "vx", d.vx);
+      nodeParamManager.setValue(d._id, "vy", d.vy);
+    });
   }
 
   /**

@@ -30,3 +30,10 @@
   - 鼠标点击：显示边信息。
 
 你可以看到这个设计非常混乱。后面会重构 event 模块让它通过回调函数添加事件并统一管理，现在懒得搞了。
+
+# TIPS:
+
+## 参数设置
+
+Q: parameter.onChange 报错了，怎么办？如何查找 onChange 的具体定义？
+A: 先定位是哪个参数报错了，然后去查找该参数的注册类。注册类见`parameter.py`的 NodeParameterRegistry 的`registerAll`方法，其中有诸多注册类以及被注册的变量名。
