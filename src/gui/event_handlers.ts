@@ -61,7 +61,7 @@ export class ClickHandler {
   onClick(event: MouseEvent, node: Node | null, edge: Edge | null): void {
     if (node) {
       console.log(`Node clicked:`, node);
-      showNodeParameters(node._id, this.controller.getGraph().getNodeParameterManager());
+      showNodeParameters(node._id, this.controller.getGraph().getParamManager());
       // DONE: 显示节点信息框
     } else if (edge) {
       console.log(`Edge clicked: from ${edge.source} to ${edge.target}`);

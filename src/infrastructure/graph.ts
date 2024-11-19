@@ -1,4 +1,4 @@
-import { NodeParameterManager, NodeParameter } from "./parameter";
+import { ParameterManager, Parameter } from "./parameter";
 
 /**
  * 节点接口，描述节点的属性。
@@ -23,8 +23,8 @@ export interface Edge {
 
 export class NodeBasicParamRegistry {
   private graph: Graph;
-  private nodeParamManager: NodeParameterManager;
-  constructor(graph: Graph, nodeParamManager: NodeParameterManager) {
+  private nodeParamManager: ParameterManager;
+  constructor(graph: Graph, nodeParamManager: ParameterManager) {
     this.graph = graph;
     this.nodeParamManager = nodeParamManager;
   }
@@ -38,13 +38,13 @@ export class NodeBasicParamRegistry {
   register(...params: string[]): void {
     params.forEach((param) => {
       console.log(this.nodeParamManager); // FIXME: remove this line
-      if (this.nodeParamManager.has(param)) {
+      if (this.nodeParamManager.existInNode(param)) {
         console.warn(`Node parameter ${param} already exists, skip.`);
         return;
       }
       switch (param) {
         case "info": {
-          this.nodeParamManager.add({
+          this.nodeParamManager.addToNode({
             name: "info",
             type: "string",
             value: "",
@@ -78,7 +78,7 @@ export class Graph {
   private edgeAddedCallbacks: Array<GraphEventCallback>;
   private edgeRemovedCallbacks: Array<GraphEventCallback>;
 
-  private nodeParameterManager: NodeParameterManager;
+  private nodeParamManager: ParameterManager;
   /**
    * 构造函数，初始化图的结构。
    */
@@ -96,7 +96,7 @@ export class Graph {
     this.edgeRemovedCallbacks = new Array();
 
     // 其他附属数据结构，其中可能会注册一些回调，所以要第三个被初始化
-    this.nodeParameterManager = new NodeParameterManager(this);
+    this.nodeParamManager = new ParameterManager(this);
   }
 
   /**
@@ -283,8 +283,8 @@ export class Graph {
     );
   }
 
-  getNodeParameterManager(): NodeParameterManager {
-    return this.nodeParameterManager;
+  getParamManager(): ParameterManager {
+    return this.nodeParamManager;
   }
 
   /**

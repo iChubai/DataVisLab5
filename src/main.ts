@@ -2,7 +2,7 @@
 
 import { GUIController } from "./gui/controller.js";
 import { SNN } from "./snn/snn.js";
-import { NodeParameterRegistry } from "./infrastructure/parameter.js";
+import { NodeParameterRegistry, EdgeParameterRegistry } from "./infrastructure/parameter.js";
 
 /**
  * 主模块入口，用于初始化图形控制器并绑定到页面上的 SVG 元素。
@@ -22,8 +22,15 @@ document.addEventListener("submit", (e) => {
 // 初始化图形控制器
 const controller: GUIController = new GUIController(svg);
 const snn: SNN = new SNN(controller.getGraph());
+
 const nodeParamRegistry: NodeParameterRegistry = new NodeParameterRegistry(
   controller.getGraph(),
-  controller.getGraph().getNodeParameterManager()
+  controller.getGraph().getParamManager()
 );
 nodeParamRegistry.registerAll(); // 注册节点参数
+
+const edgeParamRegistry: NodeParameterRegistry = new NodeParameterRegistry(
+  controller.getGraph(),
+  controller.getGraph().getParamManager()
+);
+edgeParamRegistry.registerAll(); // 注册边参数

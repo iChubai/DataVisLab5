@@ -1,16 +1,16 @@
-import { NodeParameter, NodeParameterManager } from "../infrastructure/parameter";
+import { Parameter, ParameterManager } from "../infrastructure/parameter";
 
 const parameterPanel = document.querySelector("#parameterPanel") as HTMLDivElement;
 const parameterForm = document.querySelector("#parameterForm") as HTMLFormElement;
 
-export function showNodeParameters(nodeId: string, parameterManager: NodeParameterManager) {
+export function showNodeParameters(nodeId: string, parameterManager: ParameterManager) {
   console.log("showNodeParameters", nodeId, parameterManager);
 
   if (!parameterPanel || !parameterForm) {
     throw new Error("Cannot find parameter panel or form");
   }
 
-  const parameters = parameterManager.getParameters(nodeId);
+  const parameters = parameterManager.getParametersFromTarget(nodeId);
   if (parameters.length === 0) {
     parameterPanel.style.display = "none";
     return;

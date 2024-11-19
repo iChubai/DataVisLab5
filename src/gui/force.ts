@@ -1,15 +1,15 @@
 import * as d3 from "d3";
 import { Graph, Node, Edge } from "../infrastructure/graph";
 import { GUIController } from "./controller";
-import { NodeParameterManager } from "../infrastructure/parameter";
+import { ParameterManager } from "../infrastructure/parameter";
 
 // 定义常量
 const NODE_DEFAULT_RADIUS = 20; // 节点的默认半径
 
 export class NodePhysicParamRegistry {
   private graph: Graph;
-  private nodeParamManager: NodeParameterManager;
-  constructor(graph: Graph, nodeParamManager: NodeParameterManager) {
+  private nodeParamManager: ParameterManager;
+  constructor(graph: Graph, nodeParamManager: ParameterManager) {
     this.graph = graph;
     this.nodeParamManager = nodeParamManager;
   }
@@ -27,13 +27,13 @@ export class NodePhysicParamRegistry {
   register(...params: string[]): void {
     params.forEach((param) => {
       console.log(this.nodeParamManager); // FIXME: remove this line
-      if (this.nodeParamManager.has(param)) {
+      if (this.nodeParamManager.existInNode(param)) {
         console.warn(`Node parameter ${param} already exists, skip.`);
         return;
       }
       switch (param) {
         case "x": {
-          this.nodeParamManager.add({
+          this.nodeParamManager.addToNode({
             name: "x",
             type: "number",
             value: 0,
@@ -45,7 +45,7 @@ export class NodePhysicParamRegistry {
           });
         }
         case "y": {
-          this.nodeParamManager.add({
+          this.nodeParamManager.addToNode({
             name: "y",
             type: "number",
             value: 0,
@@ -57,7 +57,7 @@ export class NodePhysicParamRegistry {
           });
         }
         case "vx": {
-          this.nodeParamManager.add({
+          this.nodeParamManager.addToNode({
             name: "vx",
             type: "number",
             value: 0,
@@ -69,7 +69,7 @@ export class NodePhysicParamRegistry {
           });
         }
         case "vy": {
-          this.nodeParamManager.add({
+          this.nodeParamManager.addToNode({
             name: "vy",
             type: "number",
             value: 0,
@@ -81,7 +81,7 @@ export class NodePhysicParamRegistry {
           });
         }
         case "radius": {
-          this.nodeParamManager.add({
+          this.nodeParamManager.addToNode({
             name: "radius",
             type: "number",
             value: NODE_DEFAULT_RADIUS,
@@ -106,8 +106,8 @@ export class NodePhysicParamRegistry {
  */
 export class NodeRenderParamRegistry {
   private graph: Graph;
-  private nodeParamManager: NodeParameterManager;
-  constructor(graph: Graph, nodeParamManager: NodeParameterManager) {
+  private nodeParamManager: ParameterManager;
+  constructor(graph: Graph, nodeParamManager: ParameterManager) {
     this.graph = graph;
     this.nodeParamManager = nodeParamManager;
   }
@@ -120,7 +120,7 @@ export class NodeRenderParamRegistry {
    */
   register(...params: string[]): void {
     params.forEach((param) => {
-      if (this.nodeParamManager.has(param)) {
+      if (this.nodeParamManager.existInNode(param)) {
         console.warn(`Node parameter ${param} already exists, skip.`);
         return;
       }
@@ -154,7 +154,7 @@ export class ForceSimulator {
     this.width = this.controller.getSVG().clientWidth;
     this.height = this.controller.getSVG().clientHeight;
     const graph = this.controller.getGraph();
-    const nodeParameterManager = graph.getNodeParameterManager();
+    const nodeParameterManager = graph.getParamManager();
 
     const svg = d3.select(this.controller.getSVG());
     svg.append("g").attr("class", "edges"); // 初始化边容器
@@ -162,10 +162,10 @@ export class ForceSimulator {
 
     const nodes = graph.getNodes().map((node) => ({
       _id: node._id,
-      x: nodeParameterManager.getValue(node._id, "x"),
-      y: nodeParameterManager.getValue(node._id, "y"),
-      vx: nodeParameterManager.getValue(node._id, "vx"),
-      vy: nodeParameterManager.getValue(node._id, "vy"),
+      x: nodeParameterManager.get(node._id, "x"),
+      y: nodeParameterManager.get(node._id, "y"),
+      vx: nodeParameterManager.get(node._id, "vx"),
+      vy: nodeParameterManager.get(node._id, "vy"),
     }));
 
     const edges = this.controller
@@ -229,6 +229,20 @@ export class ForceSimulator {
       .append("circle")
       .attr("r", (d) => NODE_DEFAULT_RADIUS)
       .attr("fill", (d) => "steelblue")
+      .on("mouseover", (event, node) => {
+        d3.select(event.target).attr("fill", "lightblue");
+        console.log("Mouseover on node:", node);
+      }) // 设置鼠标移入节点时变色
+      .on("mouseout", (event, node) => {
+        d3.select(event.target).attr("fill", "steelblue");
+      }) // 设置鼠标移出节点时恢复
+      // .on("dragstart", (event, node) => {
+      //   d3.select(event.target).attr("fill", "skyblue");
+      // }) // 设置节点开始拖拽时变色
+      // .on("dragend", (event, node) => {
+      //   d3.select(event.target).attr("fill", "steelblue");
+      // }) // 设置节点结束拖拽时恢复
+      // NOTE: 此处定义的拖拽事件似乎会被`applyDragBehavior`覆盖。
       .call((enter) => {
         this.applyDragBehavior(enter);
         this.applyClickBehavior(enter);
@@ -239,12 +253,12 @@ export class ForceSimulator {
     node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
 
     // 将节点的物理参数实时返回给参数管理器。
-    const nodeParamManager = this.controller.getGraph().getNodeParameterManager();
+    const nodeParamManager = this.controller.getGraph().getParamManager();
     node.each((d) => {
-      nodeParamManager.setValue(d._id, "x", d.x);
-      nodeParamManager.setValue(d._id, "y", d.y);
-      nodeParamManager.setValue(d._id, "vx", d.vx);
-      nodeParamManager.setValue(d._id, "vy", d.vy);
+      nodeParamManager.set(d._id, "x", d.x);
+      nodeParamManager.set(d._id, "y", d.y);
+      nodeParamManager.set(d._id, "vx", d.vx);
+      nodeParamManager.set(d._id, "vy", d.vy);
     });
   }
 
@@ -269,10 +283,10 @@ export class ForceSimulator {
       .on("mouseover", (event, edge) => {
         d3.select(event.target).attr("stroke", "lightblue");
         console.log("Mouseover on edge:", edge);
-      })
+      }) // 设置鼠标移入边时变色
       .on("mouseout", (event, edge) => {
         d3.select(event.target).attr("stroke", "transparent");
-      });
+      }); // 设置鼠标移出边时恢复
 
     edgePath.attr("d", (d) => {
       const source = this.controller.getGraph().getNodeById(d.source);
