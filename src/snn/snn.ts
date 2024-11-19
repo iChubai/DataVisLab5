@@ -1,92 +1,139 @@
+// ./src/snn/snn.ts
+
 import { Graph, Node, Edge } from "../infrastructure/graph";
-import { Neuron } from "./neuron";
-import { Synapse } from "./synapse";
 import { LIFNeuronModel } from "./models/lif";
 import { HebbianSynapseModel } from "./models/hebbian";
+import { ParameterManager } from "../infrastructure/parameter";
+import { NeuronModel, SynapseModel } from "./interface";
 
+export class Neuron {
+  _id: string;
+  private model: NeuronModel;
+
+  constructor(id: string, model: NeuronModel) {
+    this._id = id;
+    this.model = model;
+  }
+
+  update(deltaTime: number, inputs: number): boolean {
+    return this.model.update(deltaTime, this._id, inputs);
+  }
+
+  getPotential(): number {
+    return this.model.getPotential(this._id);
+  }
+
+  reset(): void {
+    this.model.reset(this._id);
+  }
+}
+
+export class Synapse {
+  _id: string;
+  source: string;
+  target: string;
+  private model: SynapseModel;
+
+  constructor(id: string, source: string, target: string, model: SynapseModel) {
+    this._id = id;
+    this.source = source;
+    this.target = target;
+    this.model = model;
+  }
+
+  /**
+   * 更新突触权重。
+   * @param deltaTime - 时间步长。
+   * @returns 突触权重。
+   */
+  update(deltaTime: number): void {
+    this.model.update(deltaTime, this._id);
+  }
+
+  getWeight(): number {
+    return this.model.getWeight(this._id);
+  }
+}
+
+/**
+ * 神经网络。
+ *
+ * 支持的模型：
+ * - 神经元模型：
+ *   - `LIF`：Leaky Integrate and Fire 神经元模型。
+ * - 突触模型：
+ *   - `Hebbian`：Hebbian 突触模型。
+ */
 export class SNN {
+  private graph: Graph;
+  private params: ParameterManager;
+
   private neurons: Map<string, Neuron>;
   private synapses: Map<string, Synapse>;
-  private graph: Graph;
 
-  constructor(graph: Graph) {
+  private neuronModel: NeuronModel;
+  private synapseModel: SynapseModel;
+
+  /**
+   * 创建一个神经网络。
+   * @param graph - 神经网络的图。
+   * @param parameterManager - 参数管理器。
+   * @param neuronModel - 神经元模型。
+   *  - `LIF`：Leaky Integrate and Fire 神经元模型。
+   * @param synapseModel - 突触模型。
+   *  - `Hebbian`：Hebbian 突触模型。
+   */
+  constructor(
+    graph: Graph,
+    parameterManager: ParameterManager,
+    neuronModel: string | NeuronModel = "LIF",
+    synapseModel: string | SynapseModel = "Hebbian"
+  ) {
     this.graph = graph;
+    this.params = parameterManager;
+
     this.neurons = new Map();
     this.synapses = new Map();
 
-    // 初始化神经元和突触
-    this.initializeNeurons();
-    this.initializeSynapses();
+    this.neuronModel =
+      typeof neuronModel === "string"
+        ? {
+            LIF: new LIFNeuronModel(this.params),
+            // TODO: ...
+          }[neuronModel] ||
+          (() => {
+            throw new Error(`Invalid neuron model: ${neuronModel}`);
+          }).apply(null)
+        : neuronModel;
+    this.synapseModel =
+      typeof synapseModel === "string"
+        ? {
+            Hebbian: new HebbianSynapseModel(this.params),
+            // TODO: ...
+          }[synapseModel] ||
+          (() => {
+            throw new Error(`Invalid synapse model: ${synapseModel}`);
+          }).apply(null)
+        : synapseModel;
 
-    // 动态同步 Graph 的变化
+    // 注册增删元素的回调函数
     this.graph.onNodeAdded((nodeId) => {
       this.addNeuron(nodeId);
-      console.log(`Neuron added: ${nodeId}`);
     });
-
     this.graph.onNodeRemoved((nodeId) => {
       this.removeNeuron(nodeId);
-      console.log(`Neuron removed: ${nodeId}`);
     });
-
     this.graph.onEdgeAdded((edgeId) => {
       this.addSynapse(edgeId);
-      console.log(`Synapse added: ${edgeId}`);
     });
-
     this.graph.onEdgeRemoved((edgeId) => {
       this.removeSynapse(edgeId);
-      console.log(`Synapse removed: ${edgeId}`);
     });
-  }
-
-  private initializeNeurons(): void {
-    const nodes = this.graph.getNodes();
-    for (const node of nodes) {
-      this.addNeuron(node._id);
-    }
-  }
-
-  private initializeSynapses(): void {
-    const edges = this.graph.getEdges();
-    for (const edge of edges) {
-      this.addSynapse(edge._id);
-    }
-  }
-
-  public update(deltaTime: number): void {
-    console.log(`SNN Update: deltaTime = ${deltaTime}`);
-
-    // 更新所有神经元
-    for (const neuron of this.neurons.values()) {
-      const inputs = this.computeNeuronInputs(neuron.id);
-      const fired = neuron.update(deltaTime, inputs);
-      console.log(
-        `Neuron ${neuron.id} | Potential: ${neuron.getPotential().toFixed(3)} | Fired: ${fired}`
-      );
-    }
-
-    // 更新所有突触
-    for (const synapse of this.synapses.values()) {
-      synapse.update(deltaTime);
-      console.log(
-        `Synapse ${synapse.source} -> ${synapse.target} | Weight: ${synapse.getWeight().toFixed(3)}`
-      );
-    }
-  }
-
-  public getNeuronState(neuronId: string): string {
-    const neuron = this.neurons.get(neuronId);
-    if (!neuron) {
-      return `Neuron ${neuronId} does not exist.`;
-    }
-
-    return `Neuron ${neuronId} | Potential: ${neuron.getPotential().toFixed(3)}`;
   }
 
   private addNeuron(nodeId: string): void {
     if (this.neurons.has(nodeId)) return;
-    this.neurons.set(nodeId, new Neuron(nodeId, new LIFNeuronModel()));
+    this.neurons.set(nodeId, new Neuron(nodeId, this.neuronModel));
   }
 
   private removeNeuron(nodeId: string): void {
@@ -97,12 +144,30 @@ export class SNN {
     if (this.synapses.has(edgeId)) return;
     this.synapses.set(
       edgeId,
-      new Synapse(Graph.getSourceId(edgeId), Graph.getTargetId(edgeId), new HebbianSynapseModel())
+      new Synapse(edgeId, Graph.getSourceId(edgeId), Graph.getTargetId(edgeId), this.synapseModel)
     );
   }
 
   private removeSynapse(edgeId: string): void {
     this.synapses.delete(edgeId);
+  }
+
+  public update(deltaTime: number): void {
+    console.log(`SNN Update: deltaTime = ${deltaTime}`);
+
+    this.neurons.forEach((neuron) => {
+      const inputs = this.computeNeuronInputs(neuron._id);
+      const fired = neuron.update(deltaTime, inputs);
+      console.log(
+        `Neuron ${neuron._id} | Potential: ${neuron.getPotential().toFixed(3)} | Fired: ${fired}`
+      );
+    });
+
+    this.synapses.forEach((synapse) => {
+      synapse.update(deltaTime);
+      const weight = synapse.getWeight();
+      console.log(`Synapse ${synapse.source} -> ${synapse.target} | Weight: ${weight.toFixed(3)}`);
+    });
   }
 
   private computeNeuronInputs(neuronId: string): number {

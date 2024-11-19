@@ -35,5 +35,11 @@
 
 ## 参数设置
 
+我重新设计了项目与参数相关的结构。现在的项目的参数通过 ParameterManager 管理，通过 showParameters 展示并提供直接交互界面，由 NodeParameterRegistry 和 EdgeParameterRegistry 注册。
+
+模拟程序（包括物理模拟、SNN 模拟等）通过 ParameterManager 的 get 和 set 方法来获取或设置参数（例如 params.get("info")）；参数面板的展示逻辑由函数 showParameters 给出，用户在更改参数面板中的参数时会更改参数值并触发参数的回调函数，通知模拟程序进行更新；在初始化时由 NodeParameterRegistry 和 EdgeParameterRegistry 统一注册到 ParameterManager 中。
+
+所有需要增加额外参数的类都需要写一个 ParameterRegistry，并在 NodeParameterRegistry 和 EdgeParameterRegistry 中注册它。
+
 Q: parameter.onChange 报错了，怎么办？如何查找 onChange 的具体定义？
 A: 先定位是哪个参数报错了，然后去查找该参数的注册类。注册类见`parameter.py`的 NodeParameterRegistry 的`registerAll`方法，其中有诸多注册类以及被注册的变量名。

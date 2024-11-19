@@ -1,3 +1,5 @@
+// ./src/parameter_explorer/parameter_explorer.ts
+
 import { Parameter, ParameterManager } from "../infrastructure/parameter";
 import { Graph } from "../infrastructure/graph";
 

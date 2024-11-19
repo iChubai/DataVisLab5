@@ -21,7 +21,6 @@ document.addEventListener("submit", (e) => {
 
 // 初始化图形控制器
 const controller: GUIController = new GUIController(svg);
-const snn: SNN = new SNN(controller.getGraph());
 
 const nodeParamRegistry: NodeParameterRegistry = new NodeParameterRegistry(
   controller.getGraph(),
@@ -34,3 +33,10 @@ const edgeParamRegistry: EdgeParameterRegistry = new EdgeParameterRegistry(
   controller.getGraph().getParamManager()
 );
 edgeParamRegistry.registerAll(); // 注册边参数
+
+const snn: SNN = new SNN(
+  controller.getGraph(),
+  controller.getGraph().getParamManager(),
+  "LIF",
+  "Hebbian"
+);

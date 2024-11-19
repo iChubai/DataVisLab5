@@ -4,6 +4,7 @@ import { Graph, Node, Edge } from "../infrastructure/graph";
 
 import { NodeBasicParamRegistry, EdgeBasicParamRegistry } from "../infrastructure/graph";
 import { NodePhysicParamRegistry } from "../gui/force";
+import { NodeSNNParameterRegistry, EdgeSNNParameterRegistry } from "../snn/parameter";
 
 /**
  * 描述单个节点参数的结构。
@@ -85,7 +86,10 @@ export class ParameterManager {
   // 仅被模拟器调用。
   get(Id: string, parameterName: string): any {
     const parameters = this.Parameters.get(Id) || [];
+    if (parameters === undefined) throw new Error(`NodeParameterManager: Node ${Id} unfound.`);
     const parameter = parameters.find((p) => p.name === parameterName);
+    if (parameter === undefined)
+      throw new Error(`NodeParameterManager: Parameter ${parameterName} unfound in node ${Id}.`);
     return parameter?.value;
   }
 
@@ -131,6 +135,7 @@ export class NodeParameterRegistry {
 
   private nodeBasicParamRegistry: NodeBasicParamRegistry; // 节点基础参数注册器
   private nodePhysicParamRegistry: NodePhysicParamRegistry; // 节点物理参数注册器
+  private nodeSNNParamRegistry: NodeSNNParameterRegistry; // 节点SNN参数注册器
   // TODO
 
   constructor(graph: Graph, parameterManager: ParameterManager) {
@@ -139,12 +144,14 @@ export class NodeParameterRegistry {
 
     this.nodeBasicParamRegistry = new NodeBasicParamRegistry(graph, parameterManager);
     this.nodePhysicParamRegistry = new NodePhysicParamRegistry(graph, parameterManager);
+    this.nodeSNNParamRegistry = new NodeSNNParameterRegistry(graph, parameterManager, "LIF");
     // TODO
   }
 
   registerAll() {
     this.nodeBasicParamRegistry.register("info");
     this.nodePhysicParamRegistry.register("x", "y", "vx", "vy", "radius");
+    this.nodeSNNParamRegistry.register("potential", "threshold");
     // TODO
 
     console.log("NodeParameterRegistry: All parameters registered.", this.parameterManager);
@@ -156,6 +163,7 @@ export class EdgeParameterRegistry {
   private parameterManager: ParameterManager;
 
   private edgeBasicParamRegistry: EdgeBasicParamRegistry; // 边基础参数注册器
+  private edgeSNNParamRegistry: EdgeSNNParameterRegistry; // 边SNN参数注册器
   // TODO
 
   constructor(graph: Graph, parameterManager: ParameterManager) {
@@ -163,11 +171,13 @@ export class EdgeParameterRegistry {
     this.parameterManager = parameterManager;
 
     this.edgeBasicParamRegistry = new EdgeBasicParamRegistry(graph, parameterManager);
+    this.edgeSNNParamRegistry = new EdgeSNNParameterRegistry(graph, parameterManager, "Hebbian");
     // TODO
   }
 
   registerAll() {
     this.edgeBasicParamRegistry.register("info");
+    this.edgeSNNParamRegistry.register("weight");
     // TODO
 
     console.log("EdgeParameterRegistry: All parameters registered.", this.parameterManager);
