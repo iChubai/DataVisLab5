@@ -63,26 +63,26 @@ export class GUIController {
     this.graph.addEdge(edge);
   }
   public removeNode(node: Node): void {
-    this.graph.removeNode(node.id);
+    this.graph.removeNode(node._id);
   }
 
   public removeEdge(edge: Edge): void {
     this.graph.removeEdge(edge);
   }
 
-  public onNodeAdded(callback: GraphEventCallback<Node>): void {
+  public onNodeAdded(callback: GraphEventCallback): void {
     this.graph.onNodeAdded(callback);
   }
 
-  public onNodeRemoved(callback: GraphEventCallback<Node>): void {
+  public onNodeRemoved(callback: GraphEventCallback): void {
     this.graph.onNodeRemoved(callback);
   }
 
-  public onEdgeAdded(callback: GraphEventCallback<Edge>): void {
+  public onEdgeAdded(callback: GraphEventCallback): void {
     this.graph.onEdgeAdded(callback);
   }
 
-  public onEdgeRemoved(callback: GraphEventCallback<Edge>): void {
+  public onEdgeRemoved(callback: GraphEventCallback): void {
     this.graph.onEdgeRemoved(callback);
   }
 }

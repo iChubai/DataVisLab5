@@ -4,7 +4,7 @@ import { NodeParameterManager, NodeParameter } from "./parameter";
  * 节点接口，描述节点的属性。
  */
 export interface Node {
-  id: string; // 节点唯一标识符
+  _id: string; // 节点唯一标识符
   x: number; // 节点的 x 坐标
   y: number; // 节点的 y 坐标
   vx: number; // 节点的 x 方向速度
@@ -62,7 +62,7 @@ export class NodeBasicParamRegistry {
   }
 }
 
-export type GraphEventCallback<T extends Node | Edge> = (data: T) => void;
+export type GraphEventCallback = (id: string) => void;
 
 /**
  * 图类，用于管理图的节点和边数据。
@@ -73,10 +73,10 @@ export class Graph {
   private adjacencyList: Map<string, { inEdges: Set<string>; outEdges: Set<string> }>; // 邻接表
   private nodeIndex: number; // 节点索引计数器
 
-  private nodeAddedCallbacks: Array<GraphEventCallback<Node>>;
-  private nodeRemovedCallbacks: Array<GraphEventCallback<Node>>;
-  private edgeAddedCallbacks: Array<GraphEventCallback<Edge>>;
-  private edgeRemovedCallbacks: Array<GraphEventCallback<Edge>>;
+  private nodeAddedCallbacks: Array<GraphEventCallback>;
+  private nodeRemovedCallbacks: Array<GraphEventCallback>;
+  private edgeAddedCallbacks: Array<GraphEventCallback>;
+  private edgeRemovedCallbacks: Array<GraphEventCallback>;
 
   private nodeParameterManager: NodeParameterManager;
   /**
@@ -105,14 +105,14 @@ export class Graph {
    * @returns {string} 返回分配给该节点的唯一 ID。
    */
   addNode(node: Node): string {
-    node.id = `${this.nodeIndex}`;
-    this.nodes.set(node.id, node);
-    this.adjacencyList.set(node.id, { inEdges: new Set(), outEdges: new Set() });
+    node._id = `${this.nodeIndex}`;
+    this.nodes.set(node._id, node);
+    this.adjacencyList.set(node._id, { inEdges: new Set(), outEdges: new Set() });
     this.nodeIndex++;
 
-    this.nodeAddedCallbacks.forEach((callback) => callback(node));
+    this.nodeAddedCallbacks.forEach((callback) => callback(node._id));
 
-    return node.id;
+    return node._id;
   }
 
   /**
@@ -120,8 +120,6 @@ export class Graph {
    * @param {number} nodeId - 要移除的节点 ID。
    */
   removeNode(nodeId: string): void {
-    this.nodeRemovedCallbacks.forEach((callback) => callback(this.getNodeById(nodeId)!)); // 先处理回调，再删除数据。
-
     if (!this.nodes.has(nodeId)) return;
 
     if (this.hasNeighbor(nodeId)) {
@@ -131,6 +129,8 @@ export class Graph {
 
     this.nodes.delete(nodeId);
     this.adjacencyList.delete(nodeId);
+
+    this.nodeRemovedCallbacks.forEach((callback) => callback(nodeId));
   }
 
   /**
@@ -145,7 +145,7 @@ export class Graph {
     this.adjacencyList.get(edge.source)!.outEdges.add(edge.target);
     this.adjacencyList.get(edge.target)!.inEdges.add(edge.source);
 
-    this.edgeAddedCallbacks.forEach((callback) => callback(edge));
+    this.edgeAddedCallbacks.forEach((callback) => callback(edge.id));
   }
 
   /**
@@ -153,29 +153,29 @@ export class Graph {
    * @param {Edge} edge - 要移除的边。
    */
   removeEdge(edge: Edge): void {
-    this.edgeRemovedCallbacks.forEach((callback) => callback(edge)); // 先处理回调，再删除数据。
-
     const key = Graph.getEdgeId(edge.source, edge.target);
     if (!this.edges.has(key)) return;
 
     this.edges.delete(key);
     this.adjacencyList.get(edge.source)!.outEdges.delete(edge.target);
     this.adjacencyList.get(edge.target)!.inEdges.delete(edge.source);
+
+    this.edgeRemovedCallbacks.forEach((callback) => callback(edge.id));
   }
 
-  onNodeAdded(callback: GraphEventCallback<Node>): void {
+  onNodeAdded(callback: GraphEventCallback): void {
     this.nodeAddedCallbacks.push(callback);
   }
 
-  onNodeRemoved(callback: GraphEventCallback<Node>): void {
+  onNodeRemoved(callback: GraphEventCallback): void {
     this.nodeRemovedCallbacks.push(callback);
   }
 
-  onEdgeAdded(callback: GraphEventCallback<Edge>): void {
+  onEdgeAdded(callback: GraphEventCallback): void {
     this.edgeAddedCallbacks.push(callback);
   }
 
-  onEdgeRemoved(callback: GraphEventCallback<Edge>): void {
+  onEdgeRemoved(callback: GraphEventCallback): void {
     this.edgeRemovedCallbacks.push(callback);
   }
 
@@ -293,7 +293,9 @@ export class Graph {
    */
   toString(): string {
     const nodesInfo = Array.from(this.nodes.values())
-      .map((node) => `Node ${node.id}: (${node.x.toFixed(2)}, ${node.y.toFixed(2)}) - Info: "TODO"`)
+      .map(
+        (node) => `Node ${node._id}: (${node.x.toFixed(2)}, ${node.y.toFixed(2)}) - Info: "TODO"`
+      )
       .join("\n");
     const edgesInfo = Array.from(this.edges.values())
       .map((edge) => `Edge: ${edge.source} -> ${edge.target} (Weight: ${edge.info})`)
@@ -309,7 +311,7 @@ export class Graph {
  */
 export function createDefaultNode(info: string): Node {
   return {
-    id: "0",
+    _id: "0",
     x: Math.random() * 500,
     y: Math.random() * 500,
     vx: 0,

@@ -161,11 +161,11 @@ export class ForceSimulator {
     svg.append("g").attr("class", "nodes"); // 初始化节点容器
 
     const nodes = graph.getNodes().map((node) => ({
-      id: node.id,
-      x: nodeParameterManager.getValue(node.id, "x"),
-      y: nodeParameterManager.getValue(node.id, "y"),
-      vx: nodeParameterManager.getValue(node.id, "vx"),
-      vy: nodeParameterManager.getValue(node.id, "vy"),
+      _id: node._id,
+      x: nodeParameterManager.getValue(node._id, "x"),
+      y: nodeParameterManager.getValue(node._id, "y"),
+      vx: nodeParameterManager.getValue(node._id, "vx"),
+      vy: nodeParameterManager.getValue(node._id, "vy"),
     }));
 
     const edges = this.controller
@@ -184,7 +184,7 @@ export class ForceSimulator {
         "link",
         d3
           .forceLink<Node, Edge>(edges)
-          .id((d) => d.id)
+          .id((d) => d._id)
           .distance(100)
       )
       .force("charge", d3.forceManyBody().strength(-500))
@@ -200,17 +200,17 @@ export class ForceSimulator {
       this.updatePositions();
     });
 
-    this.controller.onNodeAdded((node: Node) => {
-      this.whenNodeAdded(node);
+    this.controller.onNodeAdded((nodeId) => {
+      this.whenNodeAdded(nodeId);
     });
-    this.controller.onEdgeAdded((edge: Edge) => {
-      this.whenEdgeAdded(edge);
+    this.controller.onEdgeAdded((edgeId) => {
+      this.whenEdgeAdded(edgeId);
     });
-    this.controller.onNodeRemoved((node: Node) => {
-      this.whenNodeRemoved(node);
+    this.controller.onNodeRemoved((nodeId) => {
+      this.whenNodeRemoved(nodeId);
     });
-    this.controller.onEdgeRemoved((edge: Edge) => {
-      this.whenEdgeRemoved(edge);
+    this.controller.onEdgeRemoved((edgeId) => {
+      this.whenEdgeRemoved(edgeId);
     });
   }
 
@@ -222,7 +222,7 @@ export class ForceSimulator {
     const nodeGroup = d3.select(this.controller.getSVG()).select(".nodes");
     const node = nodeGroup
       .selectAll<SVGCircleElement, Node>("circle")
-      .data(this.controller.getGraph().getNodes(), (d: Node) => d.id);
+      .data(this.controller.getGraph().getNodes(), (d: Node) => d._id);
 
     node
       .enter()
@@ -306,18 +306,18 @@ export class ForceSimulator {
 
   /**
    * 添加节点时更新仿真。
-   * @param {Node} node - 要添加的节点。
+   * @param {string} nodeId - 要添加的节点。
    */
-  public whenNodeAdded(node: Node): void {
+  public whenNodeAdded(nodeId: string): void {
     this.simulation.nodes(this.controller.getGraph().getNodes());
     this.simulation.alpha(1).restart();
   }
 
   /**
    * 添加边时更新仿真。
-   * @param {Edge} edge - 要添加的边。
+   * @param {string} edgeId - 要添加的边。
    */
-  public whenEdgeAdded(edge: Edge): void {
+  public whenEdgeAdded(edgeId: string): void {
     const links = this.controller
       .getGraph()
       .getEdges()
@@ -332,18 +332,18 @@ export class ForceSimulator {
 
   /**
    * 删除节点时更新仿真。
-   * @param {Node} node - 要删除的节点 ID。
+   * @param {string} nodeId - 要删除的节点。
    */
-  public whenNodeRemoved(node: Node): void {
+  public whenNodeRemoved(nodeId: string): void {
     this.simulation.nodes(this.controller.getGraph().getNodes());
     this.simulation.alpha(1).restart();
   }
 
   /**
    * 删除边时更新仿真。
-   * @param {Edge} edge - 要删除的边。
+   * @param {string} edgeId - 要删除的边。
    */
-  public whenEdgeRemoved(edge: Edge): void {
+  public whenEdgeRemoved(edgeId: string): void {
     const links = this.controller
       .getGraph()
       .getEdges()

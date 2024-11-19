@@ -19,38 +19,38 @@ export class SNN {
     this.initializeSynapses();
 
     // 动态同步 Graph 的变化
-    this.graph.onNodeAdded((node) => {
-      this.addNeuron(node);
-      console.log(`Neuron added: ${node.id}`);
+    this.graph.onNodeAdded((nodeId) => {
+      this.addNeuron(nodeId);
+      console.log(`Neuron added: ${nodeId}`);
     });
 
-    this.graph.onNodeRemoved((node) => {
-      this.removeNeuron(node);
-      console.log(`Neuron removed: ${node.id}`);
+    this.graph.onNodeRemoved((nodeId) => {
+      this.removeNeuron(nodeId);
+      console.log(`Neuron removed: ${nodeId}`);
     });
 
-    this.graph.onEdgeAdded((edge) => {
-      this.addSynapse(edge);
-      console.log(`Synapse added: ${edge.id}`);
+    this.graph.onEdgeAdded((edgeId) => {
+      this.addSynapse(edgeId);
+      console.log(`Synapse added: ${edgeId}`);
     });
 
-    this.graph.onEdgeRemoved((edge) => {
-      this.removeSynapse(edge);
-      console.log(`Synapse removed: ${edge.id}`);
+    this.graph.onEdgeRemoved((edgeId) => {
+      this.removeSynapse(edgeId);
+      console.log(`Synapse removed: ${edgeId}`);
     });
   }
 
   private initializeNeurons(): void {
     const nodes = this.graph.getNodes();
     for (const node of nodes) {
-      this.addNeuron(node);
+      this.addNeuron(node._id);
     }
   }
 
   private initializeSynapses(): void {
     const edges = this.graph.getEdges();
     for (const edge of edges) {
-      this.addSynapse(edge);
+      this.addSynapse(edge.id);
     }
   }
 
@@ -84,22 +84,25 @@ export class SNN {
     return `Neuron ${neuronId} | Potential: ${neuron.getPotential().toFixed(3)}`;
   }
 
-  private addNeuron(node: Node): void {
-    if (this.neurons.has(node.id)) return;
-    this.neurons.set(node.id, new Neuron(node.id, new LIFNeuronModel()));
+  private addNeuron(nodeId: string): void {
+    if (this.neurons.has(nodeId)) return;
+    this.neurons.set(nodeId, new Neuron(nodeId, new LIFNeuronModel()));
   }
 
-  private removeNeuron(node: Node): void {
-    this.neurons.delete(node.id);
+  private removeNeuron(nodeId: string): void {
+    this.neurons.delete(nodeId);
   }
 
-  private addSynapse(edge: Edge): void {
-    if (this.synapses.has(edge.id)) return;
-    this.synapses.set(edge.id, new Synapse(edge.source, edge.target, new HebbianSynapseModel()));
+  private addSynapse(edgeId: string): void {
+    if (this.synapses.has(edgeId)) return;
+    this.synapses.set(
+      edgeId,
+      new Synapse(Graph.getSourceId(edgeId), Graph.getTargetId(edgeId), new HebbianSynapseModel())
+    );
   }
 
-  private removeSynapse(edge: Edge): void {
-    this.synapses.delete(edge.id);
+  private removeSynapse(edgeId: string): void {
+    this.synapses.delete(edgeId);
   }
 
   private computeNeuronInputs(neuronId: string): number {

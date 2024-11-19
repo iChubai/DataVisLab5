@@ -33,8 +33,8 @@ export class DragHandler {
     targetNode: Node | null,
     info: number
   ): void {
-    if (targetNode && targetNode.id !== node.id)
-      this.controller.addEdge(createDefaultEdge(node.id, targetNode.id, "1"));
+    if (targetNode && targetNode._id !== node._id)
+      this.controller.addEdge(createDefaultEdge(node._id, targetNode._id, "1"));
   }
 }
 
@@ -61,7 +61,7 @@ export class ClickHandler {
   onClick(event: MouseEvent, node: Node | null, edge: Edge | null): void {
     if (node) {
       console.log(`Node clicked:`, node);
-      showNodeParameters(node.id, this.controller.getGraph().getNodeParameterManager());
+      showNodeParameters(node._id, this.controller.getGraph().getNodeParameterManager());
       // DONE: 显示节点信息框
     } else if (edge) {
       console.log(`Edge clicked: from ${edge.source} to ${edge.target}`);
@@ -69,12 +69,11 @@ export class ClickHandler {
     } else {
       const [x, y] = d3.pointer(event, this.controller.getSVG());
       let id = this.controller.addNode({
-        id: "0",
+        _id: "0",
         x: x,
         y: y,
         vx: 0,
         vy: 0,
-        info: `Node created at node-${Date.now()}`,
       });
       console.log(`New node created: ${id}`);
     }
@@ -104,7 +103,7 @@ export class HoldHandler {
   onHolding(event: MouseEvent, node: Node | null, edge: Edge | null): void {
     if (node) {
       this.controller.removeNode(node);
-      console.log(`Node removed: ${node.id}`);
+      console.log(`Node removed: ${node._id}`);
     }
     if (edge) {
       this.controller.removeEdge(edge);

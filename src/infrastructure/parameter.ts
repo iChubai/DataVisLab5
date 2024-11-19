@@ -33,16 +33,16 @@ export class NodeParameterManager {
     this.nodeParameters = new Map();
     this.initialParameters = [];
 
-    this.graph.onNodeAdded((node) => {
-      // this.nodeParameters.set(node.id, this.initialParameters.slice()); 这是浅拷贝，不对。
-      this.nodeParameters.set(node.id, JSON.parse(JSON.stringify(this.initialParameters))); // 这里用深拷贝
+    this.graph.onNodeAdded((nodeId) => {
+      // this.nodeParameters.set(nodeId, this.initialParameters.slice()); 这是浅拷贝，不对。
+      this.nodeParameters.set(nodeId, JSON.parse(JSON.stringify(this.initialParameters))); // 这里用深拷贝
       console.log(
-        `NodeParameterManager: Node added: ${node.id} with parameters: `,
-        this.nodeParameters.get(node.id)
+        `NodeParameterManager: Node added: ${nodeId} with parameters: `,
+        this.nodeParameters.get(nodeId)
       );
     });
-    this.graph.onNodeRemoved((node) => {
-      this.nodeParameters.delete(node.id);
+    this.graph.onNodeRemoved((nodeId) => {
+      this.nodeParameters.delete(nodeId);
     });
   }
 
