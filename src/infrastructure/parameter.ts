@@ -151,7 +151,7 @@ export class NodeParameterRegistry {
   registerAll() {
     this.nodeBasicParamRegistry.register("info");
     this.nodePhysicParamRegistry.register("x", "y", "vx", "vy", "radius");
-    this.nodeSNNParamRegistry.register("potential", "threshold");
+    this.nodeSNNParamRegistry.register("potential", "threshold", "recovery", "resistance");
     // TODO
 
     console.log("NodeParameterRegistry: All parameters registered.", this.parameterManager);
@@ -177,7 +177,7 @@ export class EdgeParameterRegistry {
 
   registerAll() {
     this.edgeBasicParamRegistry.register("info");
-    this.edgeSNNParamRegistry.register("weight");
+    this.edgeSNNParamRegistry.register("weight", "learningRate");
     // TODO
 
     console.log("EdgeParameterRegistry: All parameters registered.", this.parameterManager);

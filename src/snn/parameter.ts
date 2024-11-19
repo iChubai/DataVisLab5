@@ -31,6 +31,13 @@ export class NodeSNNParameterRegistry {
   /**
    * 注册所有神经元参数，托管给具体的神经元模型注册器。
    * @param params - 神经元参数名称列表。
+   *
+   * 支持的参数：
+   * - LIF 模型：
+   *    - `potential`: 节点的电位，初始值为 0。
+   *    - `threshold`: 节点的阈值，初始值为 1。
+   *    - `recovery`: 节点的恢复时间常数，初始值为 0.1。
+   *    - `resistance`: 节点的输入电阻，初始值为 1。
    */
   register(...params: string[]): void {
     this.paramRegistry.register(...params);
@@ -64,6 +71,11 @@ export class EdgeSNNParameterRegistry {
   /**
    * 注册所有突触参数，托管给具体的突触模型注册器。
    * @param params - 突触参数名称列表。
+   *
+   * 支持的参数：
+   * - Hebbian 模型：
+   *    - `weight`: 突触的权重，初始值为 0.5。
+   *    - `learningRate`: 突触的学习率，初始值为 0.01。
    */
   register(...params: string[]): void {
     this.paramRegistry.register(...params);

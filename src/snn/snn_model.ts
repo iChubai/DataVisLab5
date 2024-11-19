@@ -64,7 +64,7 @@ export class Synapse {
  * - 突触模型：
  *   - `Hebbian`：Hebbian 突触模型。
  */
-export class SNN {
+export class SNNModel {
   private graph: Graph;
   private params: ParameterManager;
 

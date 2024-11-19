@@ -18,8 +18,8 @@ export class EdgeHebbianParamRegistry {
    * @param {...string} params - 要注册的参数名。
    *
    * 支持的参数：
-   * - "weight": 突触权重。
-   * - "learningRate": 学习速率。
+   * - "weight": 突触权重，初始值为 0.5。
+   * - "learningRate": 学习速率，初始值为 0.01。
    */
   register(...params: string[]): void {
     params.forEach((param) => {

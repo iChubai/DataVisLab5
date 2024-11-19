@@ -1,7 +1,7 @@
 // main.ts
 
 import { GUIController } from "./gui/controller.js";
-import { SNN } from "./snn/snn.js";
+import { SNNModel } from "./snn/snn_model.js";
 import { NodeParameterRegistry, EdgeParameterRegistry } from "./infrastructure/parameter.js";
 
 /**
@@ -34,7 +34,7 @@ const edgeParamRegistry: EdgeParameterRegistry = new EdgeParameterRegistry(
 );
 edgeParamRegistry.registerAll(); // 注册边参数
 
-const snn: SNN = new SNN(
+const snn: SNNModel = new SNNModel(
   controller.getGraph(),
   controller.getGraph().getParamManager(),
   "LIF",
