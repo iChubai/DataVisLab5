@@ -1,16 +1,23 @@
 import { Parameter, ParameterManager } from "../infrastructure/parameter";
+import { Graph } from "../infrastructure/graph";
 
 const parameterPanel = document.querySelector("#parameterPanel") as HTMLDivElement;
 const parameterForm = document.querySelector("#parameterForm") as HTMLFormElement;
 
-export function showNodeParameters(nodeId: string, parameterManager: ParameterManager) {
-  console.log("showNodeParameters", nodeId, parameterManager);
+/**
+ * 显示参数面板。
+ *
+ * @param itemId 要显示参数的元素（节点/边）的 ID
+ * @param parameterManager 参数管理器
+ */
+export function showParameters(itemId: string, parameterManager: ParameterManager) {
+  console.log("showParameters", itemId, parameterManager);
 
   if (!parameterPanel || !parameterForm) {
     throw new Error("Cannot find parameter panel or form");
   }
 
-  const parameters = parameterManager.getParametersFromTarget(nodeId);
+  const parameters = parameterManager.getParametersFromTarget(itemId);
   if (parameters.length === 0) {
     parameterPanel.style.display = "none";
     return;
@@ -18,6 +25,12 @@ export function showNodeParameters(nodeId: string, parameterManager: ParameterMa
 
   // 清空表单
   parameterForm.innerHTML = "";
+
+  // 展示元素类型及其标签值
+  const typeLabel = document.createElement("label");
+  typeLabel.textContent = (Graph.isEdgeId(itemId) ? "Edge" : "Node") + " " + itemId;
+  typeLabel.style.display = "block";
+  parameterForm.appendChild(typeLabel);
 
   parameters.forEach((param) => {
     const label = document.createElement("label");
@@ -74,7 +87,7 @@ export function showNodeParameters(nodeId: string, parameterManager: ParameterMa
       }
 
       param.value = newValue;
-      param.onChange(nodeId, newValue);
+      param.onChange(itemId, newValue);
     });
 
     parameterForm.appendChild(label);

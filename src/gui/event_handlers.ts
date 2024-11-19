@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import { Node, Edge, Graph, createDefaultNode, createDefaultEdge } from "../infrastructure/graph";
 import { GUIController } from "./controller";
-import { showNodeParameters } from "../parameter_explorer/parameter_explorer";
+import { showParameters } from "../parameter_explorer/parameter_explorer";
 
 // 常量
 const FORCE_MULTIPLIER = 0.1; // 力的系数，用于调节拖拽的强度
@@ -61,11 +61,12 @@ export class ClickHandler {
   onClick(event: MouseEvent, node: Node | null, edge: Edge | null): void {
     if (node) {
       console.log(`Node clicked:`, node);
-      showNodeParameters(node._id, this.controller.getGraph().getParamManager());
+      showParameters(node._id, this.controller.getGraph().getParamManager());
       // DONE: 显示节点信息框
     } else if (edge) {
       console.log(`Edge clicked: from ${edge.source} to ${edge.target}`);
-      // TODO: 显示边信息框
+      showParameters(edge._id, this.controller.getGraph().getParamManager());
+      // DONE: 显示边信息框
     } else {
       const [x, y] = d3.pointer(event, this.controller.getSVG());
       let id = this.controller.addNode({

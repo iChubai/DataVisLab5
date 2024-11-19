@@ -50,7 +50,7 @@ export class SNN {
   private initializeSynapses(): void {
     const edges = this.graph.getEdges();
     for (const edge of edges) {
-      this.addSynapse(edge.id);
+      this.addSynapse(edge._id);
     }
   }
 
@@ -110,7 +110,7 @@ export class SNN {
     let totalInput = 0;
 
     for (const edge of sourceEdges) {
-      const synapse = this.synapses.get(edge.id);
+      const synapse = this.synapses.get(edge._id);
       if (synapse) {
         totalInput += synapse.getWeight();
       }

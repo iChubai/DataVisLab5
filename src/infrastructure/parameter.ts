@@ -2,7 +2,7 @@
 
 import { Graph, Node, Edge } from "../infrastructure/graph";
 
-import { NodeBasicParamRegistry } from "../infrastructure/graph";
+import { NodeBasicParamRegistry, EdgeBasicParamRegistry } from "../infrastructure/graph";
 import { NodePhysicParamRegistry } from "../gui/force";
 
 /**
@@ -66,19 +66,19 @@ export class ParameterManager {
    * 添加一个初始参数。
    * @param parameter - 参数信息。
    */
-  addToNode(parameter: Parameter): void {
+  addNodeParam(parameter: Parameter): void {
     this.initialNodeParameters.push(parameter);
   }
 
-  addToEdge(parameter: Parameter): void {
+  addEdgeParam(parameter: Parameter): void {
     this.initialEdgeParameters.push(parameter);
   }
 
-  existInNode(parameterName: string): boolean {
+  existNodeParam(parameterName: string): boolean {
     return this.initialNodeParameters.some((p) => p.name === parameterName);
   }
 
-  existInEdge(parameterName: string): boolean {
+  existEdgeParam(parameterName: string): boolean {
     return this.initialEdgeParameters.some((p) => p.name === parameterName);
   }
 
@@ -131,6 +131,7 @@ export class NodeParameterRegistry {
 
   private nodeBasicParamRegistry: NodeBasicParamRegistry; // 节点基础参数注册器
   private nodePhysicParamRegistry: NodePhysicParamRegistry; // 节点物理参数注册器
+  // TODO
 
   constructor(graph: Graph, parameterManager: ParameterManager) {
     this.graph = graph;
@@ -154,14 +155,19 @@ export class EdgeParameterRegistry {
   private graph: Graph;
   private parameterManager: ParameterManager;
 
+  private edgeBasicParamRegistry: EdgeBasicParamRegistry; // 边基础参数注册器
+  // TODO
+
   constructor(graph: Graph, parameterManager: ParameterManager) {
     this.graph = graph;
     this.parameterManager = parameterManager;
 
+    this.edgeBasicParamRegistry = new EdgeBasicParamRegistry(graph, parameterManager);
     // TODO
   }
 
   registerAll() {
+    this.edgeBasicParamRegistry.register("info");
     // TODO
 
     console.log("EdgeParameterRegistry: All parameters registered.", this.parameterManager);

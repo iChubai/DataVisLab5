@@ -29,7 +29,7 @@ const nodeParamRegistry: NodeParameterRegistry = new NodeParameterRegistry(
 );
 nodeParamRegistry.registerAll(); // 注册节点参数
 
-const edgeParamRegistry: NodeParameterRegistry = new NodeParameterRegistry(
+const edgeParamRegistry: EdgeParameterRegistry = new EdgeParameterRegistry(
   controller.getGraph(),
   controller.getGraph().getParamManager()
 );

@@ -27,13 +27,13 @@ export class NodePhysicParamRegistry {
   register(...params: string[]): void {
     params.forEach((param) => {
       console.log(this.nodeParamManager); // FIXME: remove this line
-      if (this.nodeParamManager.existInNode(param)) {
+      if (this.nodeParamManager.existNodeParam(param)) {
         console.warn(`Node parameter ${param} already exists, skip.`);
         return;
       }
       switch (param) {
         case "x": {
-          this.nodeParamManager.addToNode({
+          this.nodeParamManager.addNodeParam({
             name: "x",
             type: "number",
             value: 0,
@@ -45,7 +45,7 @@ export class NodePhysicParamRegistry {
           });
         }
         case "y": {
-          this.nodeParamManager.addToNode({
+          this.nodeParamManager.addNodeParam({
             name: "y",
             type: "number",
             value: 0,
@@ -57,7 +57,7 @@ export class NodePhysicParamRegistry {
           });
         }
         case "vx": {
-          this.nodeParamManager.addToNode({
+          this.nodeParamManager.addNodeParam({
             name: "vx",
             type: "number",
             value: 0,
@@ -69,7 +69,7 @@ export class NodePhysicParamRegistry {
           });
         }
         case "vy": {
-          this.nodeParamManager.addToNode({
+          this.nodeParamManager.addNodeParam({
             name: "vy",
             type: "number",
             value: 0,
@@ -81,7 +81,7 @@ export class NodePhysicParamRegistry {
           });
         }
         case "radius": {
-          this.nodeParamManager.addToNode({
+          this.nodeParamManager.addNodeParam({
             name: "radius",
             type: "number",
             value: NODE_DEFAULT_RADIUS,
@@ -120,7 +120,7 @@ export class NodeRenderParamRegistry {
    */
   register(...params: string[]): void {
     params.forEach((param) => {
-      if (this.nodeParamManager.existInNode(param)) {
+      if (this.nodeParamManager.existNodeParam(param)) {
         console.warn(`Node parameter ${param} already exists, skip.`);
         return;
       }

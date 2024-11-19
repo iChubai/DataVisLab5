@@ -15,7 +15,7 @@ export interface Node {
  * 边接口，描述边的属性。
  */
 export interface Edge {
-  id: string;
+  _id: string;
   source: string; // 边的起点节点 ID
   target: string; // 边的终点节点 ID
   info: string; // 边的权重或附加信息
@@ -38,13 +38,13 @@ export class NodeBasicParamRegistry {
   register(...params: string[]): void {
     params.forEach((param) => {
       console.log(this.nodeParamManager); // FIXME: remove this line
-      if (this.nodeParamManager.existInNode(param)) {
+      if (this.nodeParamManager.existNodeParam(param)) {
         console.warn(`Node parameter ${param} already exists, skip.`);
         return;
       }
       switch (param) {
         case "info": {
-          this.nodeParamManager.addToNode({
+          this.nodeParamManager.addNodeParam({
             name: "info",
             type: "string",
             value: "",
@@ -57,6 +57,46 @@ export class NodeBasicParamRegistry {
         }
         default:
           console.warn(`Unsupported node parameter "${param}".`);
+      }
+    });
+  }
+}
+
+export class EdgeBasicParamRegistry {
+  private graph: Graph;
+  private edgeParamManager: ParameterManager;
+  constructor(graph: Graph, edgeParamManager: ParameterManager) {
+    this.graph = graph;
+    this.edgeParamManager = edgeParamManager;
+  }
+  /**
+   * 注册边参数。
+   * @param {...string} params - 要注册的参数名。
+   *
+   * 支持的参数：
+   * - "info": 边的附加信息，可以随时修改。
+   */
+  register(...params: string[]): void {
+    params.forEach((param) => {
+      if (this.edgeParamManager.existEdgeParam(param)) {
+        console.warn(`Edge parameter ${param} already exists, skip.`);
+        return;
+      }
+      switch (param) {
+        case "info": {
+          this.edgeParamManager.addEdgeParam({
+            name: "info",
+            type: "string",
+            value: "",
+            isChanganble: true,
+            onChange: (edgeId, newValue) => {
+              // TODO
+              console.log(`Edge ${edgeId} info changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
+            },
+          });
+        }
+        default:
+          console.warn(`Unsupported edge parameter "${param}".`);
       }
     });
   }
@@ -78,7 +118,7 @@ export class Graph {
   private edgeAddedCallbacks: Array<GraphEventCallback>;
   private edgeRemovedCallbacks: Array<GraphEventCallback>;
 
-  private nodeParamManager: ParameterManager;
+  private paramManager: ParameterManager;
   /**
    * 构造函数，初始化图的结构。
    */
@@ -96,7 +136,7 @@ export class Graph {
     this.edgeRemovedCallbacks = new Array();
 
     // 其他附属数据结构，其中可能会注册一些回调，所以要第三个被初始化
-    this.nodeParamManager = new ParameterManager(this);
+    this.paramManager = new ParameterManager(this);
   }
 
   /**
@@ -145,7 +185,7 @@ export class Graph {
     this.adjacencyList.get(edge.source)!.outEdges.add(edge.target);
     this.adjacencyList.get(edge.target)!.inEdges.add(edge.source);
 
-    this.edgeAddedCallbacks.forEach((callback) => callback(edge.id));
+    this.edgeAddedCallbacks.forEach((callback) => callback(edge._id));
   }
 
   /**
@@ -160,7 +200,7 @@ export class Graph {
     this.adjacencyList.get(edge.source)!.outEdges.delete(edge.target);
     this.adjacencyList.get(edge.target)!.inEdges.delete(edge.source);
 
-    this.edgeRemovedCallbacks.forEach((callback) => callback(edge.id));
+    this.edgeRemovedCallbacks.forEach((callback) => callback(edge._id));
   }
 
   onNodeAdded(callback: GraphEventCallback): void {
@@ -177,6 +217,10 @@ export class Graph {
 
   onEdgeRemoved(callback: GraphEventCallback): void {
     this.edgeRemovedCallbacks.push(callback);
+  }
+
+  static isEdgeId(id: string): boolean {
+    return id.includes("->");
   }
 
   // 通过sourcId和targetId获取边Id
@@ -284,7 +328,7 @@ export class Graph {
   }
 
   getParamManager(): ParameterManager {
-    return this.nodeParamManager;
+    return this.paramManager;
   }
 
   /**
@@ -328,7 +372,7 @@ export function createDefaultNode(info: string): Node {
  */
 export function createDefaultEdge(sourceId: string, targetId: string, weight: string = "1"): Edge {
   return {
-    id: Graph.getEdgeId(sourceId, targetId),
+    _id: Graph.getEdgeId(sourceId, targetId),
     source: sourceId,
     target: targetId,
     info: weight,
