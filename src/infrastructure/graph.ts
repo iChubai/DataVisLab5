@@ -9,7 +9,6 @@ export interface Node {
   y: number; // 节点的 y 坐标
   vx: number; // 节点的 x 方向速度
   vy: number; // 节点的 y 方向速度
-  info: string; // 节点的信息描述
 }
 
 /**
@@ -20,6 +19,47 @@ export interface Edge {
   source: string; // 边的起点节点 ID
   target: string; // 边的终点节点 ID
   info: string; // 边的权重或附加信息
+}
+
+export class NodeBasicParamRegistry {
+  private graph: Graph;
+  private nodeParamManager: NodeParameterManager;
+  constructor(graph: Graph, nodeParamManager: NodeParameterManager) {
+    this.graph = graph;
+    this.nodeParamManager = nodeParamManager;
+  }
+  /**
+   * 注册节点参数。
+   * @param {...string} params - 要注册的参数名。
+   *
+   * 支持的参数：
+   * - "info": 节点的附加信息，可以随时修改。
+   */
+  register(...params: string[]): void {
+    params.forEach((param) => {
+      console.log(this.nodeParamManager); // FIXME: remove this line
+      if (this.nodeParamManager.has(param)) {
+        console.warn(`Node parameter ${param} already exists, skip.`);
+        return;
+      }
+      switch (param) {
+        case "info": {
+          this.nodeParamManager.add({
+            name: "info",
+            type: "string",
+            value: "",
+            isChanganble: true,
+            onChange: (nodeId, newValue) => {
+              // TODO
+              console.log(`Node ${nodeId} info changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
+            },
+          });
+        }
+        default:
+          console.warn(`Unsupported node parameter "${param}".`);
+      }
+    });
+  }
 }
 
 export type GraphEventCallback<T extends Node | Edge> = (data: T) => void;
@@ -57,18 +97,6 @@ export class Graph {
 
     // 其他附属数据结构，其中可能会注册一些回调，所以要第三个被初始化
     this.nodeParameterManager = new NodeParameterManager(this);
-
-    // 这里其实相当于一个registerNodeParameter的调用示例，info参数可有可无其实。
-    this.registerNodeParameter({
-      name: "info",
-      type: "string",
-      value: "",
-      isChanganble: true,
-      onChange: (nodeId, newValue) => {
-        this.nodes.get(nodeId)!.info = newValue;
-        console.log(`Node ${nodeId} info changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
-      },
-    });
   }
 
   /**
@@ -259,20 +287,13 @@ export class Graph {
     return this.nodeParameterManager;
   }
 
-  registerNodeParameter(parameter: NodeParameter): void {
-    this.getNodeParameterManager().register(parameter);
-  }
-
   /**
    * 获取图的字符串表示。
    * @returns {string} 图的概要信息。
    */
   toString(): string {
     const nodesInfo = Array.from(this.nodes.values())
-      .map(
-        (node) =>
-          `Node ${node.id}: (${node.x.toFixed(2)}, ${node.y.toFixed(2)}) - Info: "${node.info}"`
-      )
+      .map((node) => `Node ${node.id}: (${node.x.toFixed(2)}, ${node.y.toFixed(2)}) - Info: "TODO"`)
       .join("\n");
     const edgesInfo = Array.from(this.edges.values())
       .map((edge) => `Edge: ${edge.source} -> ${edge.target} (Weight: ${edge.info})`)
@@ -293,7 +314,6 @@ export function createDefaultNode(info: string): Node {
     y: Math.random() * 500,
     vx: 0,
     vy: 0,
-    info,
   };
 }
 

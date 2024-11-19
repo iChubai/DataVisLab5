@@ -1,9 +1,137 @@
 import * as d3 from "d3";
 import { Graph, Node, Edge } from "../infrastructure/graph";
 import { GUIController } from "./controller";
+import { NodeParameterManager } from "../infrastructure/parameter";
 
 // 定义常量
 const NODE_DEFAULT_RADIUS = 20; // 节点的默认半径
+
+export class NodePhysicParamRegistry {
+  private graph: Graph;
+  private nodeParamManager: NodeParameterManager;
+  constructor(graph: Graph, nodeParamManager: NodeParameterManager) {
+    this.graph = graph;
+    this.nodeParamManager = nodeParamManager;
+  }
+  /**
+   * 注册节点参数。
+   * @param {...string} params - 要注册的参数名。
+   *
+   * 支持的参数：
+   * - x: number - 节点的 x 坐标。
+   * - y: number - 节点的 y 坐标。
+   * - vx: number - 节点的 x 方向速度。
+   * - vy: number - 节点的 y 方向速度。
+   * - radius: number - 节点的半径。
+   */
+  register(...params: string[]): void {
+    params.forEach((param) => {
+      console.log(this.nodeParamManager); // FIXME: remove this line
+      if (this.nodeParamManager.has(param)) {
+        console.warn(`Node parameter ${param} already exists, skip.`);
+        return;
+      }
+      switch (param) {
+        case "x": {
+          this.nodeParamManager.add({
+            name: "x",
+            type: "number",
+            value: 0,
+            isChanganble: true,
+            onChange: (nodeId, newValue) => {
+              // TODO
+              console.log(`Node ${nodeId} x changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
+            },
+          });
+        }
+        case "y": {
+          this.nodeParamManager.add({
+            name: "y",
+            type: "number",
+            value: 0,
+            isChanganble: true,
+            onChange: (nodeId, newValue) => {
+              // TODO
+              console.log(`Node ${nodeId} y changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
+            },
+          });
+        }
+        case "vx": {
+          this.nodeParamManager.add({
+            name: "vx",
+            type: "number",
+            value: 0,
+            isChanganble: true,
+            onChange: (nodeId, newValue) => {
+              // TODO
+              console.log(`Node ${nodeId} vx changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
+            },
+          });
+        }
+        case "vy": {
+          this.nodeParamManager.add({
+            name: "vy",
+            type: "number",
+            value: 0,
+            isChanganble: true,
+            onChange: (nodeId, newValue) => {
+              // TODO
+              console.log(`Node ${nodeId} vy changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
+            },
+          });
+        }
+        case "radius": {
+          this.nodeParamManager.add({
+            name: "radius",
+            type: "number",
+            value: NODE_DEFAULT_RADIUS,
+            isChanganble: true,
+            onChange: (nodeId, newValue) => {
+              // TODO
+              console.log(`Node ${nodeId} radius changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
+            },
+          });
+        }
+        default:
+          console.warn(`Unsupported node parameter "${param}".`);
+      }
+    });
+  }
+}
+
+/**
+ * 节点渲染参数注册类。
+ *
+ * 注：由于使用D3图形库绘制图形，因此渲染参数不宜使用CSS，所以此处将渲染参数视为节点参数的一部分。
+ */
+export class NodeRenderParamRegistry {
+  private graph: Graph;
+  private nodeParamManager: NodeParameterManager;
+  constructor(graph: Graph, nodeParamManager: NodeParameterManager) {
+    this.graph = graph;
+    this.nodeParamManager = nodeParamManager;
+  }
+  /**
+   * 注册节点渲染参数。
+   * @param {...string} params - 要注册的参数名。
+   *
+   * 支持的参数：
+   * // TODO
+   */
+  register(...params: string[]): void {
+    params.forEach((param) => {
+      if (this.nodeParamManager.has(param)) {
+        console.warn(`Node parameter ${param} already exists, skip.`);
+        return;
+      }
+      switch (param) {
+        // TODO
+        default:
+          console.warn(`Unsupported node render parameter ${param}, skip.`);
+      }
+    });
+  }
+}
 
 /**
  * 力学仿真类，用于处理节点和边的力学模拟与更新。
@@ -25,12 +153,21 @@ export class ForceSimulator {
     this.controller = controller;
     this.width = this.controller.getSVG().clientWidth;
     this.height = this.controller.getSVG().clientHeight;
+    const graph = this.controller.getGraph();
+    const nodeParameterManager = graph.getNodeParameterManager();
 
     const svg = d3.select(this.controller.getSVG());
     svg.append("g").attr("class", "edges"); // 初始化边容器
     svg.append("g").attr("class", "nodes"); // 初始化节点容器
 
-    const nodes = this.controller.getGraph().getNodes();
+    const nodes = graph.getNodes().map((node) => ({
+      id: node.id,
+      x: nodeParameterManager.getValue(node.id, "x"),
+      y: nodeParameterManager.getValue(node.id, "y"),
+      vx: nodeParameterManager.getValue(node.id, "vx"),
+      vy: nodeParameterManager.getValue(node.id, "vy"),
+    }));
+
     const edges = this.controller
       .getGraph()
       .getEdges()

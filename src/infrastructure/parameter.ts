@@ -1,4 +1,7 @@
-import { Graph } from "./graph";
+// ./src/infrastructure/parameter.ts
+
+import { Graph, NodeBasicParamRegistry } from "../infrastructure/graph";
+import { NodePhysicParamRegistry } from "../gui/force";
 
 /**
  * 描述单个节点参数的结构。
@@ -10,7 +13,8 @@ export interface NodeParameter {
   options?: any[]; // 可选值（针对下拉框类型）
   isChanganble: boolean; // 是否可修改
   onChange: (nodeId: string, newValue: any) => void; // 当参数值变化时的回调函数。
-  //这些回调函数会在参数值发生变化时被调用（见parameter_explorer.ts中的param.onChange）。
+  // 这些回调函数会在参数值**因手动更改而**发生变化时被调用（见parameter_explorer.ts中的param.onChange）。
+  // 注意：**因自动变化而**产生的变化不会触发回调函数，例如物理模拟导致x变化时，不会触发回调函数。
 }
 
 /**
@@ -43,11 +47,30 @@ export class NodeParameterManager {
   }
 
   /**
-   * 注册一个初始参数。
+   * 添加一个初始参数。
    * @param parameter - 参数信息。
    */
-  register(parameter: NodeParameter): void {
+  add(parameter: NodeParameter): void {
     this.initialParameters.push(parameter);
+  }
+
+  has(parameterName: string): boolean {
+    return this.initialParameters.some((p) => p.name === parameterName);
+  }
+
+  getValue(nodeId: string, parameterName: string): any {
+    const parameters = this.nodeParameters.get(nodeId) || [];
+    const parameter = parameters.find((p) => p.name === parameterName);
+    return parameter?.value;
+  }
+
+  setValue(nodeId: string, parameterName: string, value: any): void {
+    const parameters = this.nodeParameters.get(nodeId) || [];
+    const parameter = parameters.find((p) => p.name === parameterName);
+    if (parameter) {
+      parameter.value = value;
+      parameter.onChange(nodeId, value);
+    }
   }
 
   /**
@@ -69,5 +92,28 @@ export class NodeParameterManager {
    */
   getParameters(nodeId: string): NodeParameter[] {
     return this.nodeParameters.get(nodeId) || [];
+  }
+}
+
+export class NodeParameterRegistry {
+  private graph: Graph;
+  private parameterManager: NodeParameterManager;
+
+  private nodeBasicParamRegistry: NodeBasicParamRegistry; // 节点基础参数注册器
+  private nodePhysicParamRegistry: NodePhysicParamRegistry; // 节点物理参数注册器
+
+  constructor(graph: Graph, parameterManager: NodeParameterManager) {
+    this.graph = graph;
+    this.parameterManager = parameterManager;
+
+    this.nodeBasicParamRegistry = new NodeBasicParamRegistry(graph, parameterManager);
+    this.nodePhysicParamRegistry = new NodePhysicParamRegistry(graph, parameterManager);
+  }
+
+  registerAll() {
+    this.nodeBasicParamRegistry.register("info");
+    this.nodePhysicParamRegistry.register("x", "y", "vx", "vy", "radius");
+
+    console.log("NodeParameterRegistry: All parameters registered.", this.parameterManager);
   }
 }
