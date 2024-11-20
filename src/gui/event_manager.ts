@@ -1,9 +1,11 @@
 import * as d3 from "d3";
 import { Graph, Node, Edge } from "../infrastructure/graph";
-import { DragHandler, ClickHandler, HoldHandler } from "./event_handlers";
+import { DragHandler, HoldHandler } from "./event_handlers";
 import { GUIController } from "./controller";
 
 const NODE_DEFAULT_RADIUS = 20; // 节点的默认半径
+
+export type MouseEventCallback = (event: MouseEvent, itemId?: string) => void;
 
 /**
  * 鼠标事件管理器，负责处理与鼠标相关的操作，包括点击、拖拽和按住操作。
@@ -15,12 +17,15 @@ export class MouseEventManager {
   private graph: Graph; // 图数据结构
   private container: SVGSVGElement; // SVG 容器
   private dragHandler: DragHandler; // 拖拽处理器
-  private clickHandler: ClickHandler; // 单击处理器
   private holdHandler: HoldHandler; // 按住处理器
 
   private isMouseDown: boolean = false; // 记录鼠标按下状态
   private mouseDownStartTime: number = 0; // 记录鼠标按下的时间
   private startNode: Node | null = null; // 记录鼠标按下时的节点
+
+  private nodeClickedCallback: Array<MouseEventCallback>; // 节点单击事件回调函数
+  private edgeClickedCallback: Array<MouseEventCallback>; // 边单击事件回调函数
+  private backgroundClickedCallback: Array<MouseEventCallback>; // 背景单击事件回调函数
 
   /**
    * 构造函数，初始化鼠标事件管理器。
@@ -31,8 +36,11 @@ export class MouseEventManager {
     this.graph = controller.getGraph();
     this.container = controller.getSVG();
     this.dragHandler = new DragHandler(controller);
-    this.clickHandler = new ClickHandler(controller);
     this.holdHandler = new HoldHandler(controller);
+
+    this.nodeClickedCallback = [];
+    this.edgeClickedCallback = [];
+    this.backgroundClickedCallback = [];
 
     // 绑定鼠标事件
     this.container.addEventListener("mousedown", (event: MouseEvent) => this.onMouseDown(event));
@@ -85,8 +93,16 @@ export class MouseEventManager {
   }
 
   onMouseClick(event: MouseEvent, node: Node | null, edge: Edge | null): void {
-    this.clickHandler.onClick(event, node, edge);
-    console.log("Click: ", node, edge);
+    if (node) {
+      this.nodeClickedCallback.forEach((callback) => callback(event, node._id));
+      console.log("Node clicked: ", node);
+    } else if (edge) {
+      this.edgeClickedCallback.forEach((callback) => callback(event, edge._id));
+      console.log("Edge clicked: ", edge);
+    } else {
+      this.backgroundClickedCallback.forEach((callback) => callback(event));
+      console.log("Background clicked");
+    }
   }
 
   /**
@@ -96,6 +112,22 @@ export class MouseEventManager {
    */
   onDragEnd(event: d3.D3DragEvent<SVGCircleElement, Node, Node>, startNode: Node): void {
     this.dragHandler.onDragEnd(event, startNode, this.findNodeUnderPlace(event.x, event.y), 1);
+  }
+
+  // ----------------
+  // 注册事件的回调函数
+  // ----------------
+
+  onNodeClicked(callback: MouseEventCallback): void {
+    this.nodeClickedCallback.push(callback);
+  }
+
+  onEdgeClicked(callback: MouseEventCallback): void {
+    this.edgeClickedCallback.push(callback);
+  }
+
+  onBackgroundClicked(callback: MouseEventCallback): void {
+    this.backgroundClickedCallback.push(callback);
   }
 
   /**

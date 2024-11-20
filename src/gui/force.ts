@@ -193,6 +193,18 @@ export class ForceSimulator {
       .force("y", d3.forceY(this.height / 2).strength(0.1))
       .force("drag", this.createDragForce(0.02));
 
+    // Tick 更新逻辑
+    this.simulation.on("tick", () => {
+      this.updateEdges();
+      this.updateNodes();
+      this.updatePositions();
+    });
+  }
+
+  /**
+   * 向其他模块注册回调函数。
+   */
+  registerCallbacks(): void {
     this.controller.onNodeAdded((nodeId) => {
       this.whenNodeAdded(nodeId);
     });
@@ -204,13 +216,6 @@ export class ForceSimulator {
     });
     this.controller.onEdgeRemoved((edgeId) => {
       this.whenEdgeRemoved(edgeId);
-    });
-
-    // Tick 更新逻辑
-    this.simulation.on("tick", () => {
-      this.updateEdges();
-      this.updateNodes();
-      this.updatePositions();
     });
   }
 

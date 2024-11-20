@@ -153,20 +153,20 @@ export class SNNModel {
   }
 
   public update(deltaTime: number): void {
-    console.log(`SNN Update: deltaTime = ${deltaTime}`);
+    // console.log(`SNN Update: deltaTime = ${deltaTime}`); // FIXME: remove this line
 
     this.neurons.forEach((neuron) => {
       const inputs = this.computeNeuronInputs(neuron._id);
       const fired = neuron.update(deltaTime, inputs);
-      console.log(
-        `Neuron ${neuron._id} | Potential: ${neuron.getPotential().toFixed(3)} | Fired: ${fired}`
-      );
+      // console.log(
+      //   `Neuron ${neuron._id} | Potential: ${neuron.getPotential().toFixed(3)} | Fired: ${fired}`
+      // );// FIXME: remove this line
     });
 
     this.synapses.forEach((synapse) => {
       synapse.update(deltaTime);
       const weight = synapse.getWeight();
-      console.log(`Synapse ${synapse.source} -> ${synapse.target} | Weight: ${weight.toFixed(3)}`);
+      // console.log(`Synapse ${synapse.source} -> ${synapse.target} | Weight: ${weight.toFixed(3)}`); // FIXME: remove this line
     });
   }
 

@@ -1,7 +1,11 @@
 // main.ts
 
+import * as d3 from "d3";
+
 import { GUIController } from "./gui/controller.js";
 import { SNNModel } from "./snn/snn_model.js";
+import { SNNSimulator } from "./snn/simulator.js";
+import { ChartDrawer } from "./chart/drawer.js";
 import { NodeParameterRegistry, EdgeParameterRegistry } from "./infrastructure/parameter.js";
 
 /**
@@ -40,3 +44,15 @@ const snn: SNNModel = new SNNModel(
   "LIF",
   "Hebbian"
 );
+
+const svgChart = d3.select("#chart");
+const container = svgChart.select("#chart-container") as d3.Selection<
+  SVGGElement,
+  unknown,
+  any,
+  any
+>;
+const chartDrawer = new ChartDrawer(controller.getGraph().getParamManager(), container); // 初始化图表绘制器
+chartDrawer.registerCallbacks(controller);
+const snnSimulator = new SNNSimulator(snn, chartDrawer); // 初始化 SNN 模拟器
+snnSimulator.run(); // 运行 SNN 模拟器

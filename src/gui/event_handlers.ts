@@ -1,7 +1,6 @@
 import * as d3 from "d3";
 import { Node, Edge, Graph, createDefaultNode, createDefaultEdge } from "../infrastructure/graph";
 import { GUIController } from "./controller";
-import { showParameters } from "../parameter_explorer/parameter_explorer";
 
 // 常量
 const FORCE_MULTIPLIER = 0.1; // 力的系数，用于调节拖拽的强度
@@ -41,45 +40,8 @@ export class DragHandler {
 /**
  * 单击处理器，用于处理节点或边的单击事件。
  */
-export class ClickHandler {
-  private controller: GUIController; // 图形控制器实例
-
-  /**
-   * 构造函数，初始化单击处理器。
-   * @param {GUIController} controller - 图形控制器实例。
-   */
-  constructor(controller: GUIController) {
-    this.controller = controller;
-  }
-
-  /**
-   * 单击事件的回调函数。
-   * @param {MouseEvent} event - 鼠标事件对象。
-   * @param {Node | null} node - 被单击的节点对象（如果有）。
-   * @param {Edge | null} edge - 被单击的边对象（如果有）。
-   */
-  onClick(event: MouseEvent, node: Node | null, edge: Edge | null): void {
-    if (node) {
-      console.log(`Node clicked:`, node);
-      showParameters(node._id, this.controller.getGraph().getParamManager());
-      // DONE: 显示节点信息框
-    } else if (edge) {
-      console.log(`Edge clicked: from ${edge.source} to ${edge.target}`);
-      showParameters(edge._id, this.controller.getGraph().getParamManager());
-      // DONE: 显示边信息框
-    } else {
-      const [x, y] = d3.pointer(event, this.controller.getSVG());
-      let id = this.controller.addNode({
-        _id: "0",
-        x: x,
-        y: y,
-        vx: 0,
-        vy: 0,
-      });
-      console.log(`New node created: ${id}`);
-    }
-  }
-}
+// export class ClickHandler
+// 已弃用
 
 /**
  * 按住处理器，用于处理节点或边的按住事件。

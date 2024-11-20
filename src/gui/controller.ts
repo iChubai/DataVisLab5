@@ -1,6 +1,7 @@
 import { Graph, Node, Edge, GraphEventCallback } from "../infrastructure/graph";
 import { ForceSimulator } from "./force";
-import { MouseEventManager } from "./event_manager";
+import { MouseEventManager, MouseEventCallback } from "./event_manager";
+import { ParameterExplorer } from "./parameter_explorer";
 
 import * as d3 from "d3";
 
@@ -8,28 +9,32 @@ import * as d3 from "d3";
  * 控制图形的主要类，负责图形的管理、力学仿真和事件处理。
  */
 export class GUIController {
-  private svg: SVGSVGElement; // SVG容器
   private graph: Graph; // 图数据结构
   private forceSimulation: ForceSimulator; // 力学仿真器
   private eventManager: MouseEventManager; // 鼠标事件管理器
+  private parameterExplorer: ParameterExplorer; // 参数可视化绘制器
 
   /**
    * 构造函数，初始化图形控制器。
    * @param {SVGSVGElement} svg - 用于渲染的SVG容器。
    */
-  constructor(svg: SVGSVGElement) {
+  constructor(
+    private svg: SVGSVGElement // 用于渲染的SVG容器。 // private chartDrawer: ChartDrawer // 用于绘制图表。不应当直接被此类调用，后续应该写一个整体框架，通过框架调用这个模块 // TODO
+  ) {
     // 初始化SVG，设置背景颜色。
     this.svg = d3.select(svg).style("background-color", "#f9f9f9").node() as SVGSVGElement;
 
-    // 初始化图结构。
-    this.graph = new Graph();
-
-    // 初始化力学仿真并添加拖拽行为。
+    // 初始化各模块。
+    this.graph = new Graph(this);
     this.forceSimulation = new ForceSimulator(this);
     this.forceSimulation.applyDragBehavior(d3.select(this.svg).selectAll("circle"));
-
-    // 初始化事件管理器。
     this.eventManager = new MouseEventManager(this);
+    this.parameterExplorer = new ParameterExplorer(this.getGraph().getParamManager(), this);
+
+    // **在所有模块初始化结束后**，注册回调函数。
+    this.graph.registerCallbacks();
+    this.forceSimulation.registerCallbacks();
+    this.parameterExplorer.registerCallbacks();
   }
 
   /**
@@ -62,6 +67,7 @@ export class GUIController {
   public addEdge(edge: Edge): void {
     this.graph.addEdge(edge);
   }
+
   public removeNode(node: Node): void {
     this.graph.removeNode(node._id);
   }
@@ -84,5 +90,17 @@ export class GUIController {
 
   public onEdgeRemoved(callback: GraphEventCallback): void {
     this.graph.onEdgeRemoved(callback);
+  }
+
+  public onNodeClicked(callback: MouseEventCallback): void {
+    this.eventManager.onNodeClicked(callback);
+  }
+
+  public onEdgeClicked(callback: MouseEventCallback): void {
+    this.eventManager.onEdgeClicked(callback);
+  }
+
+  public onBackgroundClicked(callback: MouseEventCallback): void {
+    this.eventManager.onBackgroundClicked(callback);
   }
 }

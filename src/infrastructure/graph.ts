@@ -1,4 +1,7 @@
+import * as d3 from "d3";
+
 import { ParameterManager, Parameter } from "./parameter";
+import { GUIController } from "../gui/controller";
 
 /**
  * 节点接口，描述节点的属性。
@@ -122,7 +125,7 @@ export class Graph {
   /**
    * 构造函数，初始化图的结构。
    */
-  constructor() {
+  constructor(private controller: GUIController) {
     // 基本数据结构，存储基本内容（节点、边、邻接表、索引管理器），应当第一个被初始化
     this.nodes = new Map();
     this.edges = new Map();
@@ -137,6 +140,24 @@ export class Graph {
 
     // 其他附属数据结构，其中可能会注册一些回调，所以要第三个被初始化
     this.paramManager = new ParameterManager(this);
+  }
+
+  /**
+   * 向其他模块注册回调函数。
+   * 该函数应当在其他模块初始化之后被调用，以便注册回调函数。
+   */
+  registerCallbacks(): void {
+    this.controller.onBackgroundClicked((event) => {
+      const [x, y] = d3.pointer(event, this.controller.getSVG());
+      let id = this.addNode({
+        _id: "0",
+        x: x,
+        y: y,
+        vx: 0,
+        vy: 0,
+      });
+      console.log(`New node created: ${id}`);
+    });
   }
 
   /**

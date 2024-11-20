@@ -1,8 +1,8 @@
 // ./src/infrastructure/parameter.ts
 
-import { Graph, Node, Edge } from "../infrastructure/graph";
+import { Graph, Node, Edge } from "./graph";
 
-import { NodeBasicParamRegistry, EdgeBasicParamRegistry } from "../infrastructure/graph";
+import { NodeBasicParamRegistry, EdgeBasicParamRegistry } from "./graph";
 import { NodePhysicParamRegistry } from "../gui/force";
 import { NodeSNNParameterRegistry, EdgeSNNParameterRegistry } from "../snn/parameter";
 
