@@ -1,15 +1,15 @@
-import { Graph, Node, Edge } from "../infrastructure/graph";
+import { Graph, Node, Edge } from "../core/Graph";
 import { ForceSimulator } from "./force";
-import { MouseEventManager } from "./event_manager";
-import { ParameterExplorer } from "./parameter_explorer";
+import { MouseEventManager } from "./Canvas/Event/Manager";
+import { PanelRender } from "./Panel/Render";
 
 import * as d3 from "d3";
-import { GraphEvent, GraphEventCallback, GraphEvents } from "../infrastructure/graph_event_manager";
+import { GraphEvent, GraphEventCallback, GraphEvents } from "../core/Graph/EventManager";
 import {
   CanvasMouseEvent,
   CanvasMouseEventCallback,
   CanvasMouseEvents,
-} from "./canvas_mouse_event_manager";
+} from "./Canvas/Event/canvas_mouse_event_manager";
 
 /**
  * 控制图形的主要类，负责图形的管理、力学仿真和事件处理。
@@ -18,7 +18,7 @@ export class GUIController {
   private graph: Graph; // 图数据结构
   private forceSimulation: ForceSimulator; // 力学仿真器
   private eventManager: MouseEventManager; // 鼠标事件管理器
-  private parameterExplorer: ParameterExplorer; // 参数可视化绘制器
+  private parameterExplorer: PanelRender; // 参数可视化绘制器
 
   /**
    * 构造函数，初始化图形控制器。
@@ -35,7 +35,7 @@ export class GUIController {
     this.forceSimulation = new ForceSimulator(this);
     this.forceSimulation.applyDragBehavior(d3.select(this.svg).selectAll("circle"));
     this.eventManager = new MouseEventManager(this);
-    this.parameterExplorer = new ParameterExplorer(this.getGraph().getParamManager(), this);
+    this.parameterExplorer = new PanelRender(this.getGraph().getParamManager(), this);
 
     // **在所有模块初始化结束后**，注册回调函数。
     this.graph.registerCallbacks();

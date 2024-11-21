@@ -1,9 +1,8 @@
 import * as d3 from "d3";
 
-import { ParameterManager } from "../infrastructure/parameter";
-import { GUIController } from "../gui/controller";
-import { MouseEventManager } from "../gui/event_manager";
-import { c } from "vite/dist/node/types.d-aGj9QkWt";
+import { ParameterManager } from "../../core/ParameterManager";
+import { GUIController } from "../controller";
+import { MouseEventManager } from "../Canvas/Event/Manager";
 
 export class ChartDrawer {
   // 数据存储和曲线更新

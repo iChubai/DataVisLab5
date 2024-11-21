@@ -1,6 +1,6 @@
 import * as d3 from "d3";
-import { Node, Edge, Graph, createDefaultNode, createDefaultEdge } from "../infrastructure/graph";
-import { GUIController } from "./controller";
+import { Node, Edge, Graph, createDefaultNode, createDefaultEdge } from "../../../core/Graph";
+import { GUIController } from "../../controller";
 
 // 常量
 const FORCE_MULTIPLIER = 0.1; // 力的系数，用于调节拖拽的强度

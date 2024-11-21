@@ -1,10 +1,8 @@
-// ./src/infrastructure/parameter.ts
+import { Graph, Node, Edge } from "./Graph";
 
-import { Graph, Node, Edge } from "./graph";
-
-import { NodeBasicParamRegistry, EdgeBasicParamRegistry } from "./graph";
+import { NodeBasicParamRegistry, EdgeBasicParamRegistry } from "./Graph";
 import { NodePhysicParamRegistry } from "../gui/force";
-import { NodeSNNParameterRegistry, EdgeSNNParameterRegistry } from "../snn/parameter";
+import { NodeSNNParameterRegistry, EdgeSNNParameterRegistry } from "../logic/SNN/ParameterRegister";
 
 /**
  * 描述单个节点参数的结构。

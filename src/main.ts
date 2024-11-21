@@ -3,10 +3,10 @@
 import * as d3 from "d3";
 
 import { GUIController } from "./gui/controller.js";
-import { SNNModel } from "./snn/snn_model.js";
-import { SNNSimulator } from "./snn/simulator.js";
-import { ChartDrawer } from "./chart/drawer.js";
-import { NodeParameterRegistry, EdgeParameterRegistry } from "./infrastructure/parameter.js";
+import { SNNModel } from "./logic/SNN/Model.js";
+import { SNNSimulator } from "./logic/SNN/Simulator.js";
+import { ChartDrawer } from "./gui/Chart/Renderer.js";
+import { NodeParameterRegistry, EdgeParameterRegistry } from "./core/ParameterManager.js";
 
 /**
  * 主模块入口，用于初始化图形控制器并绑定到页面上的 SVG 元素。

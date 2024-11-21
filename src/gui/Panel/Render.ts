@@ -1,19 +1,19 @@
 // ./src/parameter_explorer/parameter_explorer.ts
 
-import { Parameter, ParameterManager } from "../infrastructure/parameter";
-import { GUIController } from "./controller";
-import { Graph } from "../infrastructure/graph";
+import { ParameterManager } from "../../core/ParameterManager";
+import { GUIController } from "../controller";
+import { Graph } from "../../core/Graph";
 
 const parameterPanel = document.querySelector("#parameterPanel") as HTMLDivElement;
 const parameterForm = document.querySelector("#parameterForm") as HTMLFormElement;
 
 /**
- * 显示参数面板。
+ * 绘制参数面板，用以交互式显示item的各个参数。
  *
  * @param itemId 要显示参数的元素（节点/边）的 ID
  * @param parameterManager 参数管理器
  */
-export class ParameterExplorer {
+export class PanelRender {
   constructor(private params: ParameterManager, private guiController: GUIController) {}
 
   registerCallbacks(): void {

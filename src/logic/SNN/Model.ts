@@ -1,11 +1,12 @@
 // ./src/snn/snn.ts
 
-import { Graph, Node, Edge } from "../infrastructure/graph";
-import { LIFNeuronModel } from "./models/lif";
-import { HebbianSynapseModel } from "./models/hebbian";
-import { ParameterManager } from "../infrastructure/parameter";
-import { NeuronModel, SynapseModel } from "./interface";
-import { GraphEvents } from "../infrastructure/graph_event_manager";
+import { Graph, Node, Edge } from "../../core/Graph";
+import { LIFNeuronModel } from "./NeuronModels/lif";
+import { HebbianSynapseModel } from "./SynapseModels/hebbian";
+import { ParameterManager } from "../../core/ParameterManager";
+import { NeuronModel } from "./NeuronModels/Interface";
+import { SynapseModel } from "./SynapseModels/Interface";
+import { GraphEvents } from "../../core/Graph/EventManager";
 
 export class Neuron {
   _id: string;

@@ -1,7 +1,7 @@
 import * as d3 from "d3";
-import { Graph, Node, Edge } from "../infrastructure/graph";
+import { Graph, Node, Edge } from "../core/Graph";
 import { GUIController } from "./controller";
-import { ParameterManager } from "../infrastructure/parameter";
+import { ParameterManager } from "../core/ParameterManager";
 
 // 定义常量
 const NODE_DEFAULT_RADIUS = 20; // 节点的默认半径

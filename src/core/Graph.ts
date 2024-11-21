@@ -1,6 +1,6 @@
 import * as d3 from "d3";
-import { GraphEvent, GraphEventManager, GraphEventCallback } from "./graph_event_manager";
-import { ParameterManager, Parameter } from "./parameter";
+import { GraphEvent, GraphEventManager, GraphEventCallback } from "./Graph/EventManager";
+import { ParameterManager, Parameter } from "./ParameterManager";
 import { GUIController } from "../gui/controller";
 
 /**

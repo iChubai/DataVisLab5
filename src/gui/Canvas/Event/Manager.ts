@@ -1,7 +1,7 @@
 import * as d3 from "d3";
-import { Graph, Node, Edge } from "../infrastructure/graph";
-import { DragHandler, HoldHandler } from "./event_handlers";
-import { GUIController } from "./controller";
+import { Graph, Node, Edge } from "../../../core/Graph";
+import { DragHandler, HoldHandler } from "./Handlers";
+import { GUIController } from "../../controller";
 import {
   CanvasMouseEvent,
   CanvasMouseEventCallback,

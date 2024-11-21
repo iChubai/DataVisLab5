@@ -1,9 +1,9 @@
 // ./src/snn/models/hebbian.ts
 
-import { SynapseModel } from "../interface";
+import { SynapseModel } from "./Interface";
 
-import { Graph } from "../../infrastructure/graph";
-import { ParameterManager } from "../../infrastructure/parameter";
+import { Graph } from "../../../core/Graph";
+import { ParameterManager } from "../../../core/ParameterManager";
 
 export class EdgeHebbianParamRegistry {
   private graph: Graph;

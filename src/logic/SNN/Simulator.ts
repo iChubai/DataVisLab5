@@ -1,6 +1,6 @@
 import * as d3 from "d3";
-import { SNNModel, Neuron, Synapse } from "./snn_model";
-import { ChartDrawer } from "../chart/drawer";
+import { SNNModel, Neuron, Synapse } from "./Model";
+import { ChartDrawer } from "../../gui/Chart/Renderer";
 
 export class SNNSimulator {
   private engine: d3.Simulation<any, any>; // 仅用于on tick。// TODO: 不一定。可能后面可视化的时候会直接用这个engine。

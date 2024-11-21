@@ -1,8 +1,8 @@
-import { Graph } from "../infrastructure/graph";
-import { ParameterManager } from "../infrastructure/parameter";
+import { Graph } from "../../core/Graph";
+import { ParameterManager } from "../../core/ParameterManager";
 
-import { NodeLIFParamRegistry } from "./models/lif";
-import { EdgeHebbianParamRegistry } from "./models/hebbian";
+import { NodeLIFParamRegistry } from "./NeuronModels/lif";
+import { EdgeHebbianParamRegistry } from "./SynapseModels/hebbian";
 
 /**
  * 注册 SNN 模块中的神经元参数。

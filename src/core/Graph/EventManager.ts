@@ -1,4 +1,4 @@
-import { Graph } from "./graph";
+import { Graph } from "../Graph";
 
 export type GraphEvent = "NodeAdded" | "NodeRemoved" | "EdgeAdded" | "EdgeRemoved";
 export const GraphEvents: Set<GraphEvent> = new Set([

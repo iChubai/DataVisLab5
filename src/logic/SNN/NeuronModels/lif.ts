@@ -1,9 +1,9 @@
 // ./src/snn/models/lif.ts
 
-import { NeuronModel } from "../interface";
+import { NeuronModel } from "./Interface";
 
-import { Graph } from "../../infrastructure/graph";
-import { ParameterManager } from "../../infrastructure/parameter";
+import { Graph } from "../../../core/Graph";
+import { ParameterManager } from "../../../core/ParameterManager";
 
 export class NodeLIFParamRegistry {
   private graph: Graph;
