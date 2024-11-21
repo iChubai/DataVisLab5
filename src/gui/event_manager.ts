@@ -2,10 +2,13 @@ import * as d3 from "d3";
 import { Graph, Node, Edge } from "../infrastructure/graph";
 import { DragHandler, HoldHandler } from "./event_handlers";
 import { GUIController } from "./controller";
+import {
+  CanvasMouseEvent,
+  CanvasMouseEventCallback,
+  CanvasMouseEventManager,
+} from "./canvas_mouse_event_manager";
 
 const NODE_DEFAULT_RADIUS = 20; // 节点的默认半径
-
-export type MouseEventCallback = (event: MouseEvent, itemId?: string) => void;
 
 /**
  * 鼠标事件管理器，负责处理与鼠标相关的操作，包括点击、拖拽和按住操作。
@@ -23,9 +26,7 @@ export class MouseEventManager {
   private mouseDownStartTime: number = 0; // 记录鼠标按下的时间
   private startNode: Node | null = null; // 记录鼠标按下时的节点
 
-  private nodeClickedCallback: Array<MouseEventCallback>; // 节点单击事件回调函数
-  private edgeClickedCallback: Array<MouseEventCallback>; // 边单击事件回调函数
-  private backgroundClickedCallback: Array<MouseEventCallback>; // 背景单击事件回调函数
+  private eventManager: CanvasMouseEventManager; // 画布鼠标事件管理器
 
   /**
    * 构造函数，初始化鼠标事件管理器。
@@ -38,9 +39,7 @@ export class MouseEventManager {
     this.dragHandler = new DragHandler(controller);
     this.holdHandler = new HoldHandler(controller);
 
-    this.nodeClickedCallback = [];
-    this.edgeClickedCallback = [];
-    this.backgroundClickedCallback = [];
+    this.eventManager = new CanvasMouseEventManager(this.container);
 
     // 绑定鼠标事件
     this.container.addEventListener("mousedown", (event: MouseEvent) => this.onMouseDown(event));
@@ -94,13 +93,16 @@ export class MouseEventManager {
 
   onMouseClick(event: MouseEvent, node: Node | null, edge: Edge | null): void {
     if (node) {
-      this.nodeClickedCallback.forEach((callback) => callback(event, node._id));
+      // this.nodeClickedCallback.forEach((callback) => callback(event, node._id));
+      this.eventManager.trigger("NodeClicked", { event, id: node._id });
       console.log("Node clicked: ", node);
     } else if (edge) {
-      this.edgeClickedCallback.forEach((callback) => callback(event, edge._id));
+      // this.edgeClickedCallback.forEach((callback) => callback(event, edge._id));
+      this.eventManager.trigger("EdgeClicked", { event, id: edge._id });
       console.log("Edge clicked: ", edge);
     } else {
-      this.backgroundClickedCallback.forEach((callback) => callback(event));
+      // this.backgroundClickedCallback.forEach((callback) => callback(event));
+      this.eventManager.trigger("CanvasClicked", { event });
       console.log("Background clicked");
     }
   }
@@ -118,16 +120,20 @@ export class MouseEventManager {
   // 注册事件的回调函数
   // ----------------
 
-  onNodeClicked(callback: MouseEventCallback): void {
-    this.nodeClickedCallback.push(callback);
-  }
+  // onNodeClicked(callback: CanvasMouseEventCallback): void {
+  //   this.nodeClickedCallback.push(callback);
+  // }
 
-  onEdgeClicked(callback: MouseEventCallback): void {
-    this.edgeClickedCallback.push(callback);
-  }
+  // onEdgeClicked(callback: CanvasMouseEventCallback): void {
+  //   this.edgeClickedCallback.push(callback);
+  // }
 
-  onBackgroundClicked(callback: MouseEventCallback): void {
-    this.backgroundClickedCallback.push(callback);
+  // onCanvasClicked(callback: CanvasMouseEventCallback): void {
+  //   this.backgroundClickedCallback.push(callback);
+  // }
+
+  on(event: CanvasMouseEvent, callback: CanvasMouseEventCallback) {
+    this.eventManager.on(event, callback);
   }
 
   /**

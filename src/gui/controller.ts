@@ -1,9 +1,15 @@
-import { Graph, Node, Edge, GraphEventCallback } from "../infrastructure/graph";
+import { Graph, Node, Edge } from "../infrastructure/graph";
 import { ForceSimulator } from "./force";
-import { MouseEventManager, MouseEventCallback } from "./event_manager";
+import { MouseEventManager } from "./event_manager";
 import { ParameterExplorer } from "./parameter_explorer";
 
 import * as d3 from "d3";
+import { GraphEvent, GraphEventCallback, GraphEvents } from "../infrastructure/graph_event_manager";
+import {
+  CanvasMouseEvent,
+  CanvasMouseEventCallback,
+  CanvasMouseEvents,
+} from "./canvas_mouse_event_manager";
 
 /**
  * 控制图形的主要类，负责图形的管理、力学仿真和事件处理。
@@ -76,31 +82,14 @@ export class GUIController {
     this.graph.removeEdge(edge);
   }
 
-  public onNodeAdded(callback: GraphEventCallback): void {
-    this.graph.onNodeAdded(callback);
-  }
-
-  public onNodeRemoved(callback: GraphEventCallback): void {
-    this.graph.onNodeRemoved(callback);
-  }
-
-  public onEdgeAdded(callback: GraphEventCallback): void {
-    this.graph.onEdgeAdded(callback);
-  }
-
-  public onEdgeRemoved(callback: GraphEventCallback): void {
-    this.graph.onEdgeRemoved(callback);
-  }
-
-  public onNodeClicked(callback: MouseEventCallback): void {
-    this.eventManager.onNodeClicked(callback);
-  }
-
-  public onEdgeClicked(callback: MouseEventCallback): void {
-    this.eventManager.onEdgeClicked(callback);
-  }
-
-  public onBackgroundClicked(callback: MouseEventCallback): void {
-    this.eventManager.onBackgroundClicked(callback);
+  public on(
+    event: GraphEvent | CanvasMouseEvent,
+    callback: GraphEventCallback | CanvasMouseEventCallback
+  ) {
+    if (GraphEvents.has(event as GraphEvent)) {
+      this.graph.on(event as GraphEvent, callback as GraphEventCallback);
+    } else if (CanvasMouseEvents.has(event as CanvasMouseEvent)) {
+      this.eventManager.on(event as CanvasMouseEvent, callback as CanvasMouseEventCallback);
+    }
   }
 }

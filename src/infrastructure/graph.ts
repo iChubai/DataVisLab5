@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-
+import { GraphEvent, GraphEventManager, GraphEventCallback } from "./graph_event_manager";
 import { ParameterManager, Parameter } from "./parameter";
 import { GUIController } from "../gui/controller";
 
@@ -105,8 +105,6 @@ export class EdgeBasicParamRegistry {
   }
 }
 
-export type GraphEventCallback = (id: string) => void;
-
 /**
  * 图类，用于管理图的节点和边数据。
  */
@@ -116,10 +114,7 @@ export class Graph {
   private adjacencyList: Map<string, { inEdges: Set<string>; outEdges: Set<string> }>; // 邻接表
   private nodeIndex: number; // 节点索引计数器
 
-  private nodeAddedCallbacks: Array<GraphEventCallback>;
-  private nodeRemovedCallbacks: Array<GraphEventCallback>;
-  private edgeAddedCallbacks: Array<GraphEventCallback>;
-  private edgeRemovedCallbacks: Array<GraphEventCallback>;
+  private eventManager: GraphEventManager;
 
   private paramManager: ParameterManager;
   /**
@@ -133,10 +128,7 @@ export class Graph {
     this.nodeIndex = 0;
 
     // 回调函数数组，有可能被接下来初始化的模块注册，所以要第二个被初始化
-    this.nodeAddedCallbacks = new Array();
-    this.nodeRemovedCallbacks = new Array();
-    this.edgeAddedCallbacks = new Array();
-    this.edgeRemovedCallbacks = new Array();
+    this.eventManager = new GraphEventManager(this);
 
     // 其他附属数据结构，其中可能会注册一些回调，所以要第三个被初始化
     this.paramManager = new ParameterManager(this);
@@ -147,7 +139,7 @@ export class Graph {
    * 该函数应当在其他模块初始化之后被调用，以便注册回调函数。
    */
   registerCallbacks(): void {
-    this.controller.onBackgroundClicked((event) => {
+    this.controller.on("CanvasClicked", (event: MouseEvent) => {
       const [x, y] = d3.pointer(event, this.controller.getSVG());
       let id = this.addNode({
         _id: "0",
@@ -171,7 +163,7 @@ export class Graph {
     this.adjacencyList.set(node._id, { inEdges: new Set(), outEdges: new Set() });
     this.nodeIndex++;
 
-    this.nodeAddedCallbacks.forEach((callback) => callback(node._id));
+    this.eventManager.trigger("NodeAdded", node._id);
 
     return node._id;
   }
@@ -191,7 +183,7 @@ export class Graph {
     this.nodes.delete(nodeId);
     this.adjacencyList.delete(nodeId);
 
-    this.nodeRemovedCallbacks.forEach((callback) => callback(nodeId));
+    this.eventManager.trigger("NodeRemoved", nodeId);
   }
 
   /**
@@ -206,7 +198,7 @@ export class Graph {
     this.adjacencyList.get(edge.source)!.outEdges.add(edge.target);
     this.adjacencyList.get(edge.target)!.inEdges.add(edge.source);
 
-    this.edgeAddedCallbacks.forEach((callback) => callback(edge._id));
+    this.eventManager.trigger("EdgeAdded", edge._id);
   }
 
   /**
@@ -221,23 +213,15 @@ export class Graph {
     this.adjacencyList.get(edge.source)!.outEdges.delete(edge.target);
     this.adjacencyList.get(edge.target)!.inEdges.delete(edge.source);
 
-    this.edgeRemovedCallbacks.forEach((callback) => callback(edge._id));
+    this.eventManager.trigger("EdgeRemoved", edge._id);
   }
 
-  onNodeAdded(callback: GraphEventCallback): void {
-    this.nodeAddedCallbacks.push(callback);
+  on(event: GraphEvent, callback: GraphEventCallback): void {
+    this.eventManager.on(event, callback);
   }
 
-  onNodeRemoved(callback: GraphEventCallback): void {
-    this.nodeRemovedCallbacks.push(callback);
-  }
-
-  onEdgeAdded(callback: GraphEventCallback): void {
-    this.edgeAddedCallbacks.push(callback);
-  }
-
-  onEdgeRemoved(callback: GraphEventCallback): void {
-    this.edgeRemovedCallbacks.push(callback);
+  off(event: GraphEvent, callback: GraphEventCallback): void {
+    this.eventManager.off(event, callback);
   }
 
   static isEdgeId(id: string): boolean {

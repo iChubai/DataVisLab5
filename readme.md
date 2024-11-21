@@ -43,3 +43,18 @@
 
 Q: parameter.onChange 报错了，怎么办？如何查找 onChange 的具体定义？
 A: 先定位是哪个参数报错了，然后去查找该参数的注册类。注册类见`parameter.py`的 NodeParameterRegistry 的`registerAll`方法，其中有诸多注册类以及被注册的变量名。
+
+## 回调函数：
+
+现在有以下几个类接受回调函数的注册：
+
+- ./src/infrastructure/graph.ts: Graph (GraphEventCallback)
+  - onNodeAdded
+  - onNodeRemoved
+  - onEdgeAdded
+  - onEdgeRemoved
+- ./src/gui/event_manager.ts: MouseEventManager (MouseEventCallback)
+  - onNodeClicked
+  - onEdgeClicked
+  - ononCanvasClicked
+- ./src/snn/snn_model.ts: SNNModel (SNNModelCallback)

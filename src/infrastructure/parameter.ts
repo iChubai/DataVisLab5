@@ -40,7 +40,7 @@ export class ParameterManager {
     this.initialEdgeParameters = [];
     this.Parameters = new Map();
 
-    this.graph.onNodeAdded((nodeId) => {
+    this.graph.on("NodeAdded", (nodeId) => {
       // this.nodeParameters.set(nodeId, this.initialParameters.slice()); 这是浅拷贝，不对。
       this.Parameters.set(nodeId, JSON.parse(JSON.stringify(this.initialNodeParameters))); // 这里用深拷贝
       console.log(
@@ -48,17 +48,17 @@ export class ParameterManager {
         this.Parameters.get(nodeId)
       );
     });
-    this.graph.onNodeRemoved((nodeId) => {
+    this.graph.on("NodeRemoved", (nodeId) => {
       this.Parameters.delete(nodeId);
     });
-    this.graph.onEdgeAdded((edgeId) => {
+    this.graph.on("EdgeAdded", (edgeId) => {
       this.Parameters.set(edgeId, JSON.parse(JSON.stringify(this.initialEdgeParameters)));
       console.log(
         `NodeParameterManager: Edge added: ${edgeId} with parameters: `,
         this.Parameters.get(edgeId)
       );
     });
-    this.graph.onEdgeRemoved((edgeId) => {
+    this.graph.on("EdgeRemoved", (edgeId) => {
       this.Parameters.delete(edgeId);
     });
   }

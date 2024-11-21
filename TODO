@@ -16,6 +16,7 @@
     - [ ] 删除节点/边时，关闭打开的编辑框，以防止潜在的无效赋值。
     - [ ] 早期代码（graph和force）里的参数没有用parameter统一管理。抽空回去整理一下。（咕）
     - [ ] 早期代码（event）里既有拿handler处理的事件也有用回调函数处理的事件，需要统一管理。（咕）
+            事实是没咕。做了一半了，明天上线把CanvasMouseEventManager（原MouseEventManager）给refactor完。
 - [ ] TODO:
     - [ ] 可交互图构建界面：
         - [x] 节点拖动

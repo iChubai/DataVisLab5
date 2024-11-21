@@ -71,15 +71,15 @@ export class ChartDrawer {
    * @param item
    */
   registerCallbacks(item: GUIController | MouseEventManager): void {
-    item.onNodeClicked((event, nodeId) => {
+    item.on("NodeClicked", (event, nodeId) => {
       if (nodeId === undefined) throw new Error("this should not happen: nodeId is undefined");
       this.select(nodeId).start(Date.now());
     });
-    item.onEdgeClicked((event, edgeId) => {
+    item.on("EdgeClicked", (event, edgeId) => {
       if (edgeId === undefined) throw new Error("this should not happen: edgeId is undefined");
       this.select(edgeId).start(Date.now());
     });
-    item.onBackgroundClicked(() => {
+    item.on("CanvasClicked", () => {
       this.itemId = "";
       this.startTime = 0;
       this.data = [];

@@ -17,12 +17,12 @@ export class ParameterExplorer {
   constructor(private params: ParameterManager, private guiController: GUIController) {}
 
   registerCallbacks(): void {
-    this.guiController.onNodeClicked((event, nodeId) => {
+    this.guiController.on("NodeClicked", (event, nodeId) => {
       if (!nodeId) throw new Error("this should not happen: nodeId is undefined");
       this.showParameters(nodeId);
       console.log("showParameters for node", nodeId);
     });
-    this.guiController.onEdgeClicked((event, edgeId) => {
+    this.guiController.on("EdgeClicked", (event, edgeId) => {
       if (!edgeId) throw new Error("this should not happen: edgeId is undefined");
       this.showParameters(edgeId);
       console.log("showParameters for edge", edgeId);

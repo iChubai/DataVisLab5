@@ -5,6 +5,7 @@ import { LIFNeuronModel } from "./models/lif";
 import { HebbianSynapseModel } from "./models/hebbian";
 import { ParameterManager } from "../infrastructure/parameter";
 import { NeuronModel, SynapseModel } from "./interface";
+import { GraphEvents } from "../infrastructure/graph_event_manager";
 
 export class Neuron {
   _id: string;
@@ -54,6 +55,9 @@ export class Synapse {
     return this.model.getWeight(this._id);
   }
 }
+
+export type SNNEvent = "neuron-added" | "neuron-removed" | "synapse-added" | "synapse-removed";
+export type SNNEventCallback = (event: SNNEvent, itemId: string) => void;
 
 /**
  * 神经网络。
@@ -117,16 +121,16 @@ export class SNNModel {
         : synapseModel;
 
     // 注册增删元素的回调函数
-    this.graph.onNodeAdded((nodeId) => {
+    this.graph.on("NodeAdded", (nodeId) => {
       this.addNeuron(nodeId);
     });
-    this.graph.onNodeRemoved((nodeId) => {
+    this.graph.on("NodeRemoved", (nodeId) => {
       this.removeNeuron(nodeId);
     });
-    this.graph.onEdgeAdded((edgeId) => {
+    this.graph.on("EdgeAdded", (edgeId) => {
       this.addSynapse(edgeId);
     });
-    this.graph.onEdgeRemoved((edgeId) => {
+    this.graph.on("EdgeRemoved", (edgeId) => {
       this.removeSynapse(edgeId);
     });
   }

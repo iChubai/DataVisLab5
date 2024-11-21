@@ -138,8 +138,8 @@ export class NodeRenderParamRegistry {
  * 同时也负责渲染。
  */
 export class ForceSimulator {
-  private simulation: d3.Simulation<Node, Edge>; // D3 力学仿真对象
   private controller: GUIController; // 图形控制器实例
+  private simulation: d3.Simulation<Node, Edge>; // D3 力学仿真对象
   private width: number; // SVG 宽度
   private height: number; // SVG 高度
   private draggedNode: Node | null = null; // 当前拖拽的节点
@@ -205,16 +205,16 @@ export class ForceSimulator {
    * 向其他模块注册回调函数。
    */
   registerCallbacks(): void {
-    this.controller.onNodeAdded((nodeId) => {
+    this.controller.on("NodeAdded", (nodeId: string) => {
       this.whenNodeAdded(nodeId);
     });
-    this.controller.onEdgeAdded((edgeId) => {
+    this.controller.on("EdgeAdded", (edgeId: string) => {
       this.whenEdgeAdded(edgeId);
     });
-    this.controller.onNodeRemoved((nodeId) => {
+    this.controller.on("NodeRemoved", (nodeId: string) => {
       this.whenNodeRemoved(nodeId);
     });
-    this.controller.onEdgeRemoved((edgeId) => {
+    this.controller.on("EdgeRemoved", (edgeId: string) => {
       this.whenEdgeRemoved(edgeId);
     });
   }
