@@ -1,3 +1,5 @@
+// ./src/logic/SNN/Simulator.ts
+
 import * as d3 from "d3";
 import { SNNModel, Neuron, Synapse } from "./Model";
 import { ChartRender } from "../../gui/Chart/Renderer";

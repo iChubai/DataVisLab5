@@ -45,7 +45,7 @@ export class NodeBasicParamRegistry {
         return;
       }
       switch (param) {
-        case "info": {
+        case "info":
           this.nodeParamManager.addNodeParam({
             name: "info",
             type: "string",
@@ -56,9 +56,10 @@ export class NodeBasicParamRegistry {
               console.log(`Node ${nodeId} info changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
             },
           });
-        }
+          break;
         default:
           console.warn(`Unsupported node parameter "${param}".`);
+          break;
       }
     });
   }
@@ -83,7 +84,7 @@ export class EdgeBasicParamRegistry {
         return;
       }
       switch (param) {
-        case "info": {
+        case "info":
           this.edgeParamManager.addEdgeParam({
             name: "info",
             type: "string",
@@ -94,9 +95,10 @@ export class EdgeBasicParamRegistry {
               console.log(`Edge ${edgeId} info changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
             },
           });
-        }
+          break;
         default:
           console.warn(`Unsupported edge parameter "${param}".`);
+          break;
       }
     });
   }

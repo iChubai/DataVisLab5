@@ -36,6 +36,7 @@ export class EdgeHebbianParamRegistry {
               console.log(`Edge ${edgeId} weight changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
             },
           });
+          break;
         }
         case "learningRate": {
           this.edgeParamManager.addEdgeParam({
@@ -48,9 +49,11 @@ export class EdgeHebbianParamRegistry {
               console.log(`Edge ${edgeId} learningRate changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
             },
           });
+          break;
         }
         default:
           console.warn(`Unsupported edge parameter "${param}".`);
+          break;
       }
     });
   }

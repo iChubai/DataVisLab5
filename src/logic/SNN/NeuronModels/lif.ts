@@ -26,7 +26,7 @@ export class NodeLIFParamRegistry {
         return;
       }
       switch (param) {
-        case "potential": {
+        case "potential":
           this.nodeParamManager.addNodeParam({
             name: "potential",
             type: "number",
@@ -37,8 +37,8 @@ export class NodeLIFParamRegistry {
               console.log(`Node ${nodeId} potential changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
             },
           });
-        }
-        case "threshold": {
+          break;
+        case "threshold":
           this.nodeParamManager.addNodeParam({
             name: "threshold",
             type: "number",
@@ -49,8 +49,8 @@ export class NodeLIFParamRegistry {
               console.log(`Node ${nodeId} threshold changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
             },
           });
-        }
-        case "recovery": {
+          break;
+        case "recovery":
           this.nodeParamManager.addNodeParam({
             name: "recovery",
             type: "number",
@@ -61,8 +61,8 @@ export class NodeLIFParamRegistry {
               console.log(`Node ${nodeId} recovery changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
             },
           });
-        }
-        case "resistance": {
+          break;
+        case "resistance":
           this.nodeParamManager.addNodeParam({
             name: "resistance",
             type: "number",
@@ -73,9 +73,10 @@ export class NodeLIFParamRegistry {
               console.log(`Node ${nodeId} resistance changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
             },
           });
-        }
+          break;
         default:
           console.warn(`Unsupported node parameter "${param}".`);
+          break;
       }
     });
   }

@@ -115,18 +115,7 @@ export class ChartRender {
   }
 
   update(currentTime: number): void {
-    if (this.itemId === "") {
-      console.warn("Please select an item first.");
-      return;
-    }
-    if (this.paramId === "") {
-      console.warn("Please select a parameter first.");
-      return;
-    }
-    if (this.startTime === 0) {
-      console.warn("Please start the chart first.");
-      return;
-    }
+    if (this.itemId === "" || this.paramId === "" || this.startTime === 0) return; // 还没开始
 
     const xExtent = d3.extent(this.data, (d) => d[0]) as [number, number];
     const yExtent = d3.extent(this.data, (d) => d[1]) as [number, number];

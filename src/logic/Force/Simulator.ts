@@ -33,7 +33,7 @@ export class NodePhysicParamRegistry {
         return;
       }
       switch (param) {
-        case "x": {
+        case "x":
           this.nodeParamManager.addNodeParam({
             name: "x",
             type: "number",
@@ -44,8 +44,8 @@ export class NodePhysicParamRegistry {
               console.log(`Node ${nodeId} x changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
             },
           });
-        }
-        case "y": {
+          break;
+        case "y":
           this.nodeParamManager.addNodeParam({
             name: "y",
             type: "number",
@@ -56,8 +56,8 @@ export class NodePhysicParamRegistry {
               console.log(`Node ${nodeId} y changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
             },
           });
-        }
-        case "vx": {
+          break;
+        case "vx":
           this.nodeParamManager.addNodeParam({
             name: "vx",
             type: "number",
@@ -68,8 +68,8 @@ export class NodePhysicParamRegistry {
               console.log(`Node ${nodeId} vx changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
             },
           });
-        }
-        case "vy": {
+          break;
+        case "vy":
           this.nodeParamManager.addNodeParam({
             name: "vy",
             type: "number",
@@ -80,8 +80,8 @@ export class NodePhysicParamRegistry {
               console.log(`Node ${nodeId} vy changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
             },
           });
-        }
-        case "radius": {
+          break;
+        case "radius":
           this.nodeParamManager.addNodeParam({
             name: "radius",
             type: "number",
@@ -92,9 +92,10 @@ export class NodePhysicParamRegistry {
               console.log(`Node ${nodeId} radius changed to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
             },
           });
-        }
+          break;
         default:
           console.warn(`Unsupported node parameter "${param}".`);
+          break;
       }
     });
   }
@@ -129,6 +130,7 @@ export class NodeRenderParamRegistry {
         // TODO
         default:
           console.warn(`Unsupported node render parameter ${param}, skip.`);
+          break;
       }
     });
   }
