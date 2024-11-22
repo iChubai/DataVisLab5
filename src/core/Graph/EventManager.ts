@@ -7,7 +7,7 @@ export const GraphEvents: Set<GraphEvent> = new Set([
   "EdgeAdded",
   "EdgeRemoved",
 ]);
-export type GraphEventCallback = (id: string) => void;
+export type GraphEventCallback = (id: string, metaData?: Record<string, any>) => void;
 
 export class GraphEventManager {
   private _callbacks: Map<GraphEvent, GraphEventCallback[]> = new Map();
@@ -31,7 +31,8 @@ export class GraphEventManager {
     );
   }
 
-  trigger(event: GraphEvent, id: string): void {
-    this._callbacks.get(event)?.forEach((callback) => callback(id));
+  trigger(event: GraphEvent, context: { id: string; metaData?: Record<string, any> }): void {
+    const { id, metaData } = context;
+    this._callbacks.get(event)?.forEach((callback) => callback(id, metaData));
   }
 }

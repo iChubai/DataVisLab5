@@ -1,7 +1,7 @@
 import { Graph, Node, Edge } from "./Graph";
 
 import { NodeBasicParamRegistry, EdgeBasicParamRegistry } from "./Graph";
-import { NodePhysicParamRegistry } from "../gui/force";
+import { NodePhysicParamRegistry } from "../logic/Force/Simulator";
 import { NodeSNNParameterRegistry, EdgeSNNParameterRegistry } from "../logic/SNN/ParameterRegister";
 
 /**

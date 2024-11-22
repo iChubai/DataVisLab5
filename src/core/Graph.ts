@@ -150,6 +150,14 @@ export class Graph {
       });
       console.log(`New node created: ${id}`);
     });
+    this.controller.on("NodeDragEnd", (event: MouseEvent, nodeId, metaData) => {
+      if (nodeId && metaData && "DragEndNode" in metaData) {
+        const dragEndNode = metaData["DragEndNode"];
+        if (dragEndNode && dragEndNode._id !== nodeId) {
+          this.addEdge(createDefaultEdge(nodeId, dragEndNode._id, "1"));
+        }
+      }
+    });
   }
 
   /**
@@ -163,7 +171,7 @@ export class Graph {
     this.adjacencyList.set(node._id, { inEdges: new Set(), outEdges: new Set() });
     this.nodeIndex++;
 
-    this.eventManager.trigger("NodeAdded", node._id);
+    this.eventManager.trigger("NodeAdded", { id: node._id });
 
     return node._id;
   }
@@ -183,7 +191,7 @@ export class Graph {
     this.nodes.delete(nodeId);
     this.adjacencyList.delete(nodeId);
 
-    this.eventManager.trigger("NodeRemoved", nodeId);
+    this.eventManager.trigger("NodeRemoved", { id: nodeId });
   }
 
   /**
@@ -198,7 +206,7 @@ export class Graph {
     this.adjacencyList.get(edge.source)!.outEdges.add(edge.target);
     this.adjacencyList.get(edge.target)!.inEdges.add(edge.source);
 
-    this.eventManager.trigger("EdgeAdded", edge._id);
+    this.eventManager.trigger("EdgeAdded", { id: edge._id });
   }
 
   /**
@@ -213,7 +221,7 @@ export class Graph {
     this.adjacencyList.get(edge.source)!.outEdges.delete(edge.target);
     this.adjacencyList.get(edge.target)!.inEdges.delete(edge.source);
 
-    this.eventManager.trigger("EdgeRemoved", edge._id);
+    this.eventManager.trigger("EdgeRemoved", { id: edge._id });
   }
 
   on(event: GraphEvent, callback: GraphEventCallback): void {

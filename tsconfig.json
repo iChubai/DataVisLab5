@@ -107,6 +107,12 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
-  "include": ["src/**/*.ts", "src/test.js", "src/gui/force.ts", "src/render.ts", "render.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/test.js",
+    "src/logic/Force/Simulator.ts",
+    "src/render.ts",
+    "render.ts"
+  ],
   "exclude": ["node_modules"]
 }

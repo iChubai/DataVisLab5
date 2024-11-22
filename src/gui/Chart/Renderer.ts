@@ -2,7 +2,7 @@ import * as d3 from "d3";
 
 import { ParameterManager } from "../../core/ParameterManager";
 import { GUIController } from "../controller";
-import { MouseEventManager } from "../Canvas/Event/Manager";
+import { CanvasEventAnalyst } from "../Canvas/Event/Analyst";
 
 export class ChartDrawer {
   // 数据存储和曲线更新
@@ -69,7 +69,7 @@ export class ChartDrawer {
    * 还没想好这个模块应该归哪个模块管，所以干脆都写了，参数用哪个都行。
    * @param item
    */
-  registerCallbacks(item: GUIController | MouseEventManager): void {
+  registerCallbacks(item: GUIController | CanvasEventAnalyst): void {
     item.on("NodeClicked", (event, nodeId) => {
       if (nodeId === undefined) throw new Error("this should not happen: nodeId is undefined");
       this.select(nodeId).start(Date.now());
