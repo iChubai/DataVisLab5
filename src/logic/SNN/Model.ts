@@ -6,7 +6,8 @@ import { HebbianSynapseModel } from "./SynapseModels/hebbian";
 import { ParameterManager } from "../../core/ParameterManager";
 import { NeuronModel } from "./NeuronModels/Interface";
 import { SynapseModel } from "./SynapseModels/Interface";
-import { GraphEvents } from "../../core/Graph/EventManager";
+import { GraphEventManager, GraphEvents } from "../../core/Graph/EventManager";
+import { SNNEventManager } from "./Event/Manager";
 
 export class Neuron {
   _id: string;
@@ -70,9 +71,6 @@ export type SNNEventCallback = (event: SNNEvent, itemId: string) => void;
  *   - `Hebbian`：Hebbian 突触模型。
  */
 export class SNNModel {
-  private graph: Graph;
-  private params: ParameterManager;
-
   private neurons: Map<string, Neuron>;
   private synapses: Map<string, Synapse>;
 
@@ -81,6 +79,9 @@ export class SNNModel {
 
   /**
    * 创建一个神经网络。
+   *
+   * 需要注册回调函数。
+   *
    * @param graph - 神经网络的图。
    * @param parameterManager - 参数管理器。
    * @param neuronModel - 神经元模型。
@@ -89,14 +90,12 @@ export class SNNModel {
    *  - `Hebbian`：Hebbian 突触模型。
    */
   constructor(
-    graph: Graph,
-    parameterManager: ParameterManager,
+    private graph: Graph,
+    private params: ParameterManager,
+    private eventManager: SNNEventManager,
     neuronModel: string | NeuronModel = "LIF",
     synapseModel: string | SynapseModel = "Hebbian"
   ) {
-    this.graph = graph;
-    this.params = parameterManager;
-
     this.neurons = new Map();
     this.synapses = new Map();
 
@@ -120,18 +119,19 @@ export class SNNModel {
             throw new Error(`Invalid synapse model: ${synapseModel}`);
           }).apply(null)
         : synapseModel;
+  }
 
-    // 注册增删元素的回调函数
-    this.graph.on("NodeAdded", (nodeId) => {
+  registerCallbacks(graphEventManager: GraphEventManager) {
+    graphEventManager.on("NodeAdded", (nodeId) => {
       this.addNeuron(nodeId);
     });
-    this.graph.on("NodeRemoved", (nodeId) => {
+    graphEventManager.on("NodeRemoved", (nodeId) => {
       this.removeNeuron(nodeId);
     });
-    this.graph.on("EdgeAdded", (edgeId) => {
+    graphEventManager.on("EdgeAdded", (edgeId) => {
       this.addSynapse(edgeId);
     });
-    this.graph.on("EdgeRemoved", (edgeId) => {
+    graphEventManager.on("EdgeRemoved", (edgeId) => {
       this.removeSynapse(edgeId);
     });
   }
@@ -163,9 +163,12 @@ export class SNNModel {
     this.neurons.forEach((neuron) => {
       const inputs = this.computeNeuronInputs(neuron._id);
       const fired = neuron.update(deltaTime, inputs);
-      // console.log(
-      //   `Neuron ${neuron._id} | Potential: ${neuron.getPotential().toFixed(3)} | Fired: ${fired}`
-      // );// FIXME: remove this line
+      if (fired) {
+        this.eventManager.trigger("Spike", { itemId: neuron._id });
+        console.log(`[SNNModel] Spike: ${neuron._id}`); // FIXME: remove this line
+      } else {
+        this.eventManager.trigger("Reset", { itemId: neuron._id });
+      }
     });
 
     this.synapses.forEach((synapse) => {

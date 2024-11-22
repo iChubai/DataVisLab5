@@ -12,7 +12,7 @@ export type GraphEventCallback = (id: string, metaData?: Record<string, any>) =>
 export class GraphEventManager {
   private _callbacks: Map<GraphEvent, GraphEventCallback[]> = new Map();
 
-  constructor(private _graph: Graph) {
+  constructor() {
     this._callbacks = new Map();
     GraphEvents.forEach((event) => {
       this._callbacks.set(event, []);

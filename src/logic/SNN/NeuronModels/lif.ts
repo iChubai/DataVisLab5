@@ -2,14 +2,11 @@
 
 import { NeuronModel } from "./Interface";
 
-import { Graph } from "../../../core/Graph";
 import { ParameterManager } from "../../../core/ParameterManager";
 
 export class NodeLIFParamRegistry {
-  private graph: Graph;
   private nodeParamManager: ParameterManager;
-  constructor(graph: Graph, nodeParamManager: ParameterManager) {
-    this.graph = graph;
+  constructor(nodeParamManager: ParameterManager) {
     this.nodeParamManager = nodeParamManager;
   }
   /**

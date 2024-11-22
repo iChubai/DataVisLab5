@@ -1,8 +1,7 @@
-import { Graph, Node, Edge } from "./Graph";
-
 import { NodeBasicParamRegistry, EdgeBasicParamRegistry } from "./Graph";
 import { NodePhysicParamRegistry } from "../logic/Force/Simulator";
 import { NodeSNNParameterRegistry, EdgeSNNParameterRegistry } from "../logic/SNN/ParameterRegister";
+import { GraphEventManager } from "./Graph/EventManager";
 
 /**
  * 描述单个节点参数的结构。
@@ -25,20 +24,18 @@ export interface Parameter {
  * 在这里的参数都是会被显示到节点面板上的参数。
  */
 export class ParameterManager {
-  private graph: Graph;
-
   private initialNodeParameters: Parameter[]; // 初始参数列表。在节点创建时，会将初始参数列表复制到节点参数列表中。
   private initialEdgeParameters: Parameter[]; // 初始边参数列表。在边创建时，会将初始参数列表复制到边参数列表中。
   private Parameters: Map<string, Parameter[]>; // 节点/边 ID -> 参数列表
 
-  constructor(graph: Graph) {
-    this.graph = graph;
-
+  constructor() {
     this.initialNodeParameters = [];
     this.initialEdgeParameters = [];
     this.Parameters = new Map();
+  }
 
-    this.graph.on("NodeAdded", (nodeId) => {
+  registerCallbacks(graphEventManager: GraphEventManager) {
+    graphEventManager.on("NodeAdded", (nodeId) => {
       // this.nodeParameters.set(nodeId, this.initialParameters.slice()); 这是浅拷贝，不对。
       this.Parameters.set(nodeId, JSON.parse(JSON.stringify(this.initialNodeParameters))); // 这里用深拷贝
       console.log(
@@ -46,17 +43,17 @@ export class ParameterManager {
         this.Parameters.get(nodeId)
       );
     });
-    this.graph.on("NodeRemoved", (nodeId) => {
+    graphEventManager.on("NodeRemoved", (nodeId) => {
       this.Parameters.delete(nodeId);
     });
-    this.graph.on("EdgeAdded", (edgeId) => {
+    graphEventManager.on("EdgeAdded", (edgeId) => {
       this.Parameters.set(edgeId, JSON.parse(JSON.stringify(this.initialEdgeParameters)));
       console.log(
         `NodeParameterManager: Edge added: ${edgeId} with parameters: `,
         this.Parameters.get(edgeId)
       );
     });
-    this.graph.on("EdgeRemoved", (edgeId) => {
+    graphEventManager.on("EdgeRemoved", (edgeId) => {
       this.Parameters.delete(edgeId);
     });
   }
@@ -128,7 +125,6 @@ export class ParameterManager {
 }
 
 export class NodeParameterRegistry {
-  private graph: Graph;
   private parameterManager: ParameterManager;
 
   private nodeBasicParamRegistry: NodeBasicParamRegistry; // 节点基础参数注册器
@@ -136,13 +132,12 @@ export class NodeParameterRegistry {
   private nodeSNNParamRegistry: NodeSNNParameterRegistry; // 节点SNN参数注册器
   // TODO
 
-  constructor(graph: Graph, parameterManager: ParameterManager) {
-    this.graph = graph;
+  constructor(parameterManager: ParameterManager) {
     this.parameterManager = parameterManager;
 
-    this.nodeBasicParamRegistry = new NodeBasicParamRegistry(graph, parameterManager);
-    this.nodePhysicParamRegistry = new NodePhysicParamRegistry(graph, parameterManager);
-    this.nodeSNNParamRegistry = new NodeSNNParameterRegistry(graph, parameterManager, "LIF");
+    this.nodeBasicParamRegistry = new NodeBasicParamRegistry(parameterManager);
+    this.nodePhysicParamRegistry = new NodePhysicParamRegistry(parameterManager);
+    this.nodeSNNParamRegistry = new NodeSNNParameterRegistry(parameterManager, "LIF");
     // TODO
   }
 
@@ -157,19 +152,17 @@ export class NodeParameterRegistry {
 }
 
 export class EdgeParameterRegistry {
-  private graph: Graph;
   private parameterManager: ParameterManager;
 
   private edgeBasicParamRegistry: EdgeBasicParamRegistry; // 边基础参数注册器
   private edgeSNNParamRegistry: EdgeSNNParameterRegistry; // 边SNN参数注册器
   // TODO
 
-  constructor(graph: Graph, parameterManager: ParameterManager) {
-    this.graph = graph;
+  constructor(parameterManager: ParameterManager) {
     this.parameterManager = parameterManager;
 
-    this.edgeBasicParamRegistry = new EdgeBasicParamRegistry(graph, parameterManager);
-    this.edgeSNNParamRegistry = new EdgeSNNParameterRegistry(graph, parameterManager, "Hebbian");
+    this.edgeBasicParamRegistry = new EdgeBasicParamRegistry(parameterManager);
+    this.edgeSNNParamRegistry = new EdgeSNNParameterRegistry(parameterManager, "Hebbian");
     // TODO
   }
 

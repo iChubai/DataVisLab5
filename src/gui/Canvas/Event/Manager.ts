@@ -29,7 +29,7 @@ export class CanvasEventManager {
     const callbacks = this._callbacks.get(event) ?? [];
     this._callbacks.set(
       event,
-      callbacks.filter((callback) => callback !== callback)
+      callbacks.filter((c) => c !== callback)
     );
   }
 

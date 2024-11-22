@@ -11,17 +11,12 @@ import { EdgeHebbianParamRegistry } from "./SynapseModels/hebbian";
  * - `LIF`: Leaky Integrate and Fire 神经元模型。
  */
 export class NodeSNNParameterRegistry {
-  private graph: Graph;
-  private parameterManager: ParameterManager;
   private paramRegistry: NodeLIFParamRegistry; // TODO: support other neuron models
 
-  constructor(graph: Graph, parameterManager: ParameterManager, neuronModel: string) {
-    this.graph = graph;
-    this.parameterManager = parameterManager;
-
+  constructor(parameterManager: ParameterManager, neuronModel: string) {
     this.paramRegistry =
       {
-        LIF: new NodeLIFParamRegistry(graph, parameterManager),
+        LIF: new NodeLIFParamRegistry(parameterManager),
       }[neuronModel] ||
       (() => {
         throw new Error(`Unsupported neuron model ${neuronModel}.`);
@@ -51,17 +46,15 @@ export class NodeSNNParameterRegistry {
  * - `Hebbian`: Hebbian 突触模型。
  */
 export class EdgeSNNParameterRegistry {
-  private graph: Graph;
   private parameterManager: ParameterManager;
   private paramRegistry: EdgeHebbianParamRegistry; // TODO: support other synapse models
 
-  constructor(graph: Graph, parameterManager: ParameterManager, synapseModel: string) {
-    this.graph = graph;
+  constructor(parameterManager: ParameterManager, synapseModel: string) {
     this.parameterManager = parameterManager;
 
     this.paramRegistry =
       {
-        Hebbian: new EdgeHebbianParamRegistry(graph, parameterManager),
+        Hebbian: new EdgeHebbianParamRegistry(parameterManager),
       }[synapseModel] ||
       (() => {
         throw new Error(`Unsupported synapse model ${synapseModel}.`);

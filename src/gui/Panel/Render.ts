@@ -3,6 +3,7 @@
 import { ParameterManager } from "../../core/ParameterManager";
 import { GUIController } from "../controller";
 import { Graph } from "../../core/Graph";
+import { CanvasEventManager } from "../Canvas/Event/Manager";
 
 const parameterPanel = document.querySelector("#parameterPanel") as HTMLDivElement;
 const parameterForm = document.querySelector("#parameterForm") as HTMLFormElement;
@@ -14,15 +15,15 @@ const parameterForm = document.querySelector("#parameterForm") as HTMLFormElemen
  * @param parameterManager 参数管理器
  */
 export class PanelRender {
-  constructor(private params: ParameterManager, private guiController: GUIController) {}
+  constructor(private params: ParameterManager) {}
 
-  registerCallbacks(): void {
-    this.guiController.on("NodeClicked", (event, nodeId) => {
+  registerCallbacks(canvasEventManager: CanvasEventManager): void {
+    canvasEventManager.on("NodeClicked", (event, nodeId) => {
       if (!nodeId) throw new Error("this should not happen: nodeId is undefined");
       this.showParameters(nodeId);
       console.log("showParameters for node", nodeId);
     });
-    this.guiController.on("EdgeClicked", (event, edgeId) => {
+    canvasEventManager.on("EdgeClicked", (event, edgeId) => {
       if (!edgeId) throw new Error("this should not happen: edgeId is undefined");
       this.showParameters(edgeId);
       console.log("showParameters for edge", edgeId);

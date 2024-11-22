@@ -3,8 +3,9 @@ import * as d3 from "d3";
 import { ParameterManager } from "../../core/ParameterManager";
 import { GUIController } from "../controller";
 import { CanvasEventAnalyst } from "../Canvas/Event/Analyst";
+import { CanvasEventManager } from "../Canvas/Event/Manager";
 
-export class ChartDrawer {
+export class ChartRender {
   // 数据存储和曲线更新
   private data: [number, number][];
   private xScale: d3.ScaleLinear<number, number>;
@@ -26,7 +27,7 @@ export class ChartDrawer {
 
   constructor(
     private parameterManager: ParameterManager,
-    private container: d3.Selection<SVGGElement, unknown, any, any>
+    private chart: d3.Selection<SVGGElement, unknown, any, any>
   ) {
     this.data = [];
     this.xScale = d3.scaleLinear().domain([0, 10]).range([0, 500]); // 时间轴
@@ -41,7 +42,7 @@ export class ChartDrawer {
     this.startTime = 0;
 
     // 初始化路径
-    this.path = container
+    this.path = chart
       .append("path")
       .attr("class", "line")
       .attr("fill", "none")
@@ -53,12 +54,12 @@ export class ChartDrawer {
     this.yAxis = d3.axisLeft(this.yScale);
 
     // 创建坐标轴容器
-    this.xAxisGroup = container
+    this.xAxisGroup = chart
       .append("g")
       .attr("class", "x-axis")
       .attr("transform", `translate(0, 400)`); // 位置：底部
 
-    this.yAxisGroup = container
+    this.yAxisGroup = chart
       .append("g")
       .attr("class", "y-axis")
       .attr("transform", `translate(0, 0)`); // 位置：左侧
@@ -69,16 +70,16 @@ export class ChartDrawer {
    * 还没想好这个模块应该归哪个模块管，所以干脆都写了，参数用哪个都行。
    * @param item
    */
-  registerCallbacks(item: GUIController | CanvasEventAnalyst): void {
-    item.on("NodeClicked", (event, nodeId) => {
+  registerCallbacks(canvasEventManager: CanvasEventManager): void {
+    canvasEventManager.on("NodeClicked", (event, nodeId) => {
       if (nodeId === undefined) throw new Error("this should not happen: nodeId is undefined");
       this.select(nodeId).start(Date.now());
     });
-    item.on("EdgeClicked", (event, edgeId) => {
+    canvasEventManager.on("EdgeClicked", (event, edgeId) => {
       if (edgeId === undefined) throw new Error("this should not happen: edgeId is undefined");
       this.select(edgeId).start(Date.now());
     });
-    item.on("CanvasClicked", () => {
+    canvasEventManager.on("CanvasClicked", (event) => {
       this.itemId = "";
       this.startTime = 0;
       this.data = [];
@@ -86,13 +87,13 @@ export class ChartDrawer {
     });
   }
 
-  select(itemId: string): ChartDrawer {
+  select(itemId: string): ChartRender {
     this.itemId = itemId;
     this.startTime = 0;
     return this;
   }
 
-  setYParam(param: string): ChartDrawer {
+  setYParam(param: string): ChartRender {
     this.paramId = param;
     this.startTime = 0;
     return this;
@@ -139,8 +140,9 @@ export class ChartDrawer {
     if (this.data.length > 100) this.data.shift(); // 保持固定长度
 
     // 更新图像
-    this.path.datum(this.data).attr("d", this.line);
     this.xAxisGroup.call(this.xAxis);
     this.yAxisGroup.call(this.yAxis);
+    this.path.datum(this.data).attr("d", this.line);
+    // 注：上面这行会在每次更新select后第一次update的时候报一下错，猜测是因为第一组数据点没有生成。
   }
 }

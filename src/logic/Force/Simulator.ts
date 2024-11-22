@@ -2,15 +2,16 @@ import * as d3 from "d3";
 import { Graph, Node, Edge } from "../../core/Graph";
 import { GUIController } from "../../gui/controller";
 import { ParameterManager } from "../../core/ParameterManager";
+import { SNNEventManager } from "../SNN/Event/Manager";
+import { GraphEventManager } from "../../core/Graph/EventManager";
+import { CanvasEventManager } from "../../gui/Canvas/Event/Manager";
 
 // 定义常量
 const NODE_DEFAULT_RADIUS = 20; // 节点的默认半径
 
 export class NodePhysicParamRegistry {
-  private graph: Graph;
   private nodeParamManager: ParameterManager;
-  constructor(graph: Graph, nodeParamManager: ParameterManager) {
-    this.graph = graph;
+  constructor(nodeParamManager: ParameterManager) {
     this.nodeParamManager = nodeParamManager;
   }
   /**
@@ -136,46 +137,43 @@ export class NodeRenderParamRegistry {
 /**
  * 力学仿真类，用于处理节点和边的力学模拟与更新。
  * 同时也负责渲染。
+ *
+ * 需要注册回调函数。
  */
 export class ForceSimulator {
-  private controller: GUIController; // 图形控制器实例
-  private simulation: d3.Simulation<Node, Edge>; // D3 力学仿真对象
   private width: number; // SVG 宽度
   private height: number; // SVG 高度
+  private simulation: d3.Simulation<Node, Edge>; // D3 力学仿真对象
+
   private draggedNode: Node | null = null; // 当前拖拽的节点
   private dragTarget: { x: number; y: number } | null = null; // 鼠标拖拽目标位置
 
-  /**
-   * 构造函数，初始化力学仿真。
-   * @param {GUIController} controller - 图形控制器实例。
-   */
-  constructor(controller: GUIController) {
-    this.controller = controller;
-    this.width = this.controller.getSVG().clientWidth;
-    this.height = this.controller.getSVG().clientHeight;
-    const graph = this.controller.getGraph();
-    const nodeParameterManager = graph.getParamManager();
+  constructor(
+    private graph: Graph,
+    private params: ParameterManager,
+    private canvas: SVGSVGElement,
+    private canvasEventManager: CanvasEventManager
+  ) {
+    this.width = this.canvas.clientWidth;
+    this.height = this.canvas.clientHeight;
 
-    const svg = d3.select(this.controller.getSVG());
+    const svg = d3.select(this.canvas);
     svg.append("g").attr("class", "edges"); // 初始化边容器
     svg.append("g").attr("class", "nodes"); // 初始化节点容器
 
     const nodes = graph.getNodes().map((node) => ({
       _id: node._id,
-      x: nodeParameterManager.get(node._id, "x"),
-      y: nodeParameterManager.get(node._id, "y"),
-      vx: nodeParameterManager.get(node._id, "vx"),
-      vy: nodeParameterManager.get(node._id, "vy"),
+      x: params.get(node._id, "x"),
+      y: params.get(node._id, "y"),
+      vx: params.get(node._id, "vx"),
+      vy: params.get(node._id, "vy"),
     }));
 
-    const edges = this.controller
-      .getGraph()
-      .getEdges()
-      .map((edge) => ({
-        ...edge,
-        source: edge.source,
-        target: edge.target,
-      }));
+    const edges = this.graph.getEdges().map((edge) => ({
+      ...edge,
+      source: edge.source,
+      target: edge.target,
+    }));
 
     // 创建 D3 力学仿真
     this.simulation = d3
@@ -204,18 +202,42 @@ export class ForceSimulator {
   /**
    * 向其他模块注册回调函数。
    */
-  registerCallbacks(): void {
-    this.controller.on("NodeAdded", (nodeId: string) => {
-      this.whenNodeAdded(nodeId);
+  registerCallbacks(graphEventManager: GraphEventManager, snnEventManager: SNNEventManager): void {
+    graphEventManager.on("NodeAdded", (nodeId: string) => {
+      this.simulation.nodes(this.graph.getNodes());
+      this.simulation.alpha(1).restart();
     });
-    this.controller.on("EdgeAdded", (edgeId: string) => {
-      this.whenEdgeAdded(edgeId);
+
+    graphEventManager.on("EdgeAdded", (edgeId: string) => {
+      const links = this.graph.getEdges().map((edge) => ({
+        ...edge,
+        source: edge.source,
+        target: edge.target,
+      }));
+      (this.simulation.force("link") as d3.ForceLink<Node, Edge>).links(links);
+      this.simulation.alpha(1).restart();
     });
-    this.controller.on("NodeRemoved", (nodeId: string) => {
-      this.whenNodeRemoved(nodeId);
+
+    graphEventManager.on("NodeRemoved", (nodeId: string) => {
+      this.simulation.nodes(this.graph.getNodes());
+      this.simulation.alpha(1).restart();
     });
-    this.controller.on("EdgeRemoved", (edgeId: string) => {
-      this.whenEdgeRemoved(edgeId);
+
+    graphEventManager.on("EdgeRemoved", (edgeId: string) => {
+      const links = this.graph.getEdges().map((edge) => ({
+        ...edge,
+        source: edge.source,
+        target: edge.target,
+      }));
+      (this.simulation.force("link") as d3.ForceLink<Node, Edge>).links(links);
+      this.simulation.alpha(1).restart();
+    });
+
+    snnEventManager.on("Spike", (nodeId) => {
+      d3.select(`#node-${nodeId}`).attr("fill", "gold");
+      setTimeout(() => {
+        d3.select(`#node-${nodeId}`).attr("fill", "steelblue");
+      }, 100);
     });
   }
 
@@ -224,14 +246,15 @@ export class ForceSimulator {
    * 对节点数据进行绑定，并根据仿真结果更新其位置。
    */
   private updateNodes(): void {
-    const nodeGroup = d3.select(this.controller.getSVG()).select(".nodes");
+    const nodeGroup = d3.select(this.canvas).select(".nodes");
     const node = nodeGroup
       .selectAll<SVGCircleElement, Node>("circle")
-      .data(this.controller.getGraph().getNodes(), (d: Node) => d._id);
+      .data(this.graph.getNodes(), (d: Node) => d._id);
 
     node
       .enter()
       .append("circle")
+      .attr("id", (d) => `node-${d._id}`)
       .attr("r", (d) => NODE_DEFAULT_RADIUS)
       .attr("fill", (d) => "steelblue")
       .on("mouseover", (event, node) => {
@@ -258,7 +281,7 @@ export class ForceSimulator {
     node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
 
     // 将节点的物理参数实时返回给参数管理器。
-    const nodeParamManager = this.controller.getGraph().getParamManager();
+    const nodeParamManager = this.params;
     node.each((d) => {
       nodeParamManager.set(d._id, "x", d.x);
       nodeParamManager.set(d._id, "y", d.y);
@@ -272,12 +295,12 @@ export class ForceSimulator {
    * 根据仿真结果重新计算边的位置和形状。
    */
   private updateEdges(): void {
-    const edgeGroup = d3.select(this.controller.getSVG()).select(".edges");
+    const edgeGroup = d3.select(this.canvas).select(".edges");
 
     // 边检测区域
     const edgePath = edgeGroup
       .selectAll<SVGPathElement, Edge>("path")
-      .data(this.controller.getGraph().getEdges(), (d: Edge) => `${d.source}-${d.target}`);
+      .data(this.graph.getEdges(), (d: Edge) => `${d.source}-${d.target}`);
 
     edgePath
       .enter()
@@ -294,8 +317,8 @@ export class ForceSimulator {
       }); // 设置鼠标移出边时恢复
 
     edgePath.attr("d", (d) => {
-      const source = this.controller.getGraph().getNodeById(d.source);
-      const target = this.controller.getGraph().getNodeById(d.target);
+      const source = this.graph.getNodeById(d.source);
+      const target = this.graph.getNodeById(d.target);
       if (source && target) {
         return `M ${source.x},${source.y} L ${target.x},${target.y}`;
       }
@@ -306,82 +329,27 @@ export class ForceSimulator {
 
     const link = edgeGroup
       .selectAll<SVGLineElement, Edge>("line")
-      .data(this.controller.getGraph().getEdges(), (d: Edge) => `${d.source}-${d.target}`);
+      .data(this.graph.getEdges(), (d: Edge) => `${d.source}-${d.target}`);
 
     link.enter().append("line").attr("stroke", "gray").attr("stroke-width", 2);
 
     link.exit().remove();
 
     link
-      .attr("x1", (d) => this.controller.getGraph().getNodeById(d.source)?.x ?? 0)
-      .attr("y1", (d) => this.controller.getGraph().getNodeById(d.source)?.y ?? 0)
-      .attr("x2", (d) => this.controller.getGraph().getNodeById(d.target)?.x ?? 0)
-      .attr("y2", (d) => this.controller.getGraph().getNodeById(d.target)?.y ?? 0);
+      .attr("x1", (d) => this.graph.getNodeById(d.source)?.x ?? 0)
+      .attr("y1", (d) => this.graph.getNodeById(d.source)?.y ?? 0)
+      .attr("x2", (d) => this.graph.getNodeById(d.target)?.x ?? 0)
+      .attr("y2", (d) => this.graph.getNodeById(d.target)?.y ?? 0);
   }
 
   /**
    * 更新图数据位置。
    */
   private updatePositions(): void {
-    this.controller
-      .getGraph()
-      .getNodes()
-      .forEach((node) => {
-        node.x = node.x ?? 0;
-        node.y = node.y ?? 0;
-      });
-  }
-
-  /**
-   * 添加节点时更新仿真。
-   * @param {string} nodeId - 要添加的节点。
-   */
-  public whenNodeAdded(nodeId: string): void {
-    this.simulation.nodes(this.controller.getGraph().getNodes());
-    this.simulation.alpha(1).restart();
-  }
-
-  /**
-   * 添加边时更新仿真。
-   * @param {string} edgeId - 要添加的边。
-   */
-  public whenEdgeAdded(edgeId: string): void {
-    const links = this.controller
-      .getGraph()
-      .getEdges()
-      .map((edge) => ({
-        ...edge,
-        source: edge.source,
-        target: edge.target,
-      }));
-    (this.simulation.force("link") as d3.ForceLink<Node, Edge>).links(links);
-    this.simulation.alpha(1).restart();
-  }
-
-  /**
-   * 删除节点时更新仿真。
-   * @param {string} nodeId - 要删除的节点。
-   */
-  public whenNodeRemoved(nodeId: string): void {
-    this.simulation.nodes(this.controller.getGraph().getNodes());
-    this.simulation.alpha(1).restart();
-  }
-
-  /**
-   * 删除边时更新仿真。
-   * @param {string} edgeId - 要删除的边。
-   */
-  public whenEdgeRemoved(edgeId: string): void {
-    const links = this.controller
-      .getGraph()
-      .getEdges()
-      .map((edge) => ({
-        ...edge,
-        source: edge.source,
-        target: edge.target,
-      }));
-    (this.simulation.force("link") as d3.ForceLink<Node, Edge>).links(links);
-    this.simulation.alpha(1).restart();
+    this.graph.getNodes().forEach((node) => {
+      node.x = node.x ?? 0;
+      node.y = node.y ?? 0;
+    });
   }
 
   /**
@@ -430,7 +398,7 @@ export class ForceSimulator {
   private dragEnded(event: d3.D3DragEvent<SVGCircleElement, Node, Node>): void {
     if (this.draggedNode)
       // this.controller.getCanvasEventAnalyst().onDragEnd(event, this.draggedNode);
-      this.controller.getCanvasEventManager().trigger("NodeDragEnd", {
+      this.canvasEventManager.trigger("NodeDragEnd", {
         event: new MouseEvent("dragend"),
         id: this.draggedNode._id,
         metaData: { DragEndNode: this.findNodeUnderPlace(event.x, event.y) },
@@ -442,12 +410,12 @@ export class ForceSimulator {
 
   private applyClickBehavior(nodeSelection: d3.Selection<SVGCircleElement, Node, any, any>): void {
     nodeSelection.on("click", (event, node) => {
-      this.controller.getCanvasEventManager().trigger("NodeClicked", { event, id: node._id });
+      this.canvasEventManager.trigger("NodeClicked", { event, id: node._id });
     });
   }
 
   private findNodeUnderPlace(x: number, y: number): Node | null {
-    const nodes = this.controller.getGraph().getNodes();
+    const nodes = this.graph.getNodes();
     for (let node of nodes) {
       const distance = Math.sqrt(Math.pow(node.x - x, 2) + Math.pow(node.y - y, 2));
       if (distance < NODE_DEFAULT_RADIUS) {

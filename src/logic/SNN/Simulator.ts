@@ -1,10 +1,15 @@
 import * as d3 from "d3";
 import { SNNModel, Neuron, Synapse } from "./Model";
-import { ChartDrawer } from "../../gui/Chart/Renderer";
+import { ChartRender } from "../../gui/Chart/Renderer";
 
+/**
+ * SNN模拟器
+ *
+ * 不需要注册回调函数。
+ */
 export class SNNSimulator {
   private engine: d3.Simulation<any, any>; // 仅用于on tick。// TODO: 不一定。可能后面可视化的时候会直接用这个engine。
-  constructor(private model: SNNModel, private drawer: ChartDrawer) {
+  constructor(private model: SNNModel, private drawer: ChartRender) {
     this.engine = d3.forceSimulation().alphaDecay(0);
   }
 

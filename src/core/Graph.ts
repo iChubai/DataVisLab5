@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import { GraphEvent, GraphEventManager, GraphEventCallback } from "./Graph/EventManager";
 import { ParameterManager, Parameter } from "./ParameterManager";
 import { GUIController } from "../gui/controller";
+import { CanvasEventManager } from "../gui/Canvas/Event/Manager";
 
 /**
  * 节点接口，描述节点的属性。
@@ -25,10 +26,8 @@ export interface Edge {
 }
 
 export class NodeBasicParamRegistry {
-  private graph: Graph;
   private nodeParamManager: ParameterManager;
-  constructor(graph: Graph, nodeParamManager: ParameterManager) {
-    this.graph = graph;
+  constructor(nodeParamManager: ParameterManager) {
     this.nodeParamManager = nodeParamManager;
   }
   /**
@@ -66,10 +65,8 @@ export class NodeBasicParamRegistry {
 }
 
 export class EdgeBasicParamRegistry {
-  private graph: Graph;
   private edgeParamManager: ParameterManager;
-  constructor(graph: Graph, edgeParamManager: ParameterManager) {
-    this.graph = graph;
+  constructor(edgeParamManager: ParameterManager) {
     this.edgeParamManager = edgeParamManager;
   }
   /**
@@ -107,6 +104,8 @@ export class EdgeBasicParamRegistry {
 
 /**
  * 图类，用于管理图的节点和边数据。
+ *
+ * 需要注册回调函数。
  */
 export class Graph {
   private nodes: Map<string, Node>; // 存储节点的映射表
@@ -114,33 +113,24 @@ export class Graph {
   private adjacencyList: Map<string, { inEdges: Set<string>; outEdges: Set<string> }>; // 邻接表
   private nodeIndex: number; // 节点索引计数器
 
-  private eventManager: GraphEventManager;
-
-  private paramManager: ParameterManager;
   /**
    * 构造函数，初始化图的结构。
    */
-  constructor(private controller: GUIController) {
+  constructor(private eventManager: GraphEventManager, private canvas: SVGSVGElement) {
     // 基本数据结构，存储基本内容（节点、边、邻接表、索引管理器），应当第一个被初始化
     this.nodes = new Map();
     this.edges = new Map();
     this.adjacencyList = new Map();
     this.nodeIndex = 0;
-
-    // 回调函数数组，有可能被接下来初始化的模块注册，所以要第二个被初始化
-    this.eventManager = new GraphEventManager(this);
-
-    // 其他附属数据结构，其中可能会注册一些回调，所以要第三个被初始化
-    this.paramManager = new ParameterManager(this);
   }
 
   /**
    * 向其他模块注册回调函数。
    * 该函数应当在其他模块初始化之后被调用，以便注册回调函数。
    */
-  registerCallbacks(): void {
-    this.controller.on("CanvasClicked", (event: MouseEvent) => {
-      const [x, y] = d3.pointer(event, this.controller.getSVG());
+  registerCallbacks(canvasEventManager: CanvasEventManager): void {
+    canvasEventManager.on("CanvasClicked", (event: MouseEvent) => {
+      const [x, y] = d3.pointer(event, this.canvas);
       let id = this.addNode({
         _id: "0",
         x: x,
@@ -150,7 +140,7 @@ export class Graph {
       });
       console.log(`New node created: ${id}`);
     });
-    this.controller.on("NodeDragEnd", (event: MouseEvent, nodeId, metaData) => {
+    canvasEventManager.on("NodeDragEnd", (event: MouseEvent, nodeId, metaData) => {
       if (nodeId && metaData && "DragEndNode" in metaData) {
         const dragEndNode = metaData["DragEndNode"];
         if (dragEndNode && dragEndNode._id !== nodeId) {
@@ -222,14 +212,6 @@ export class Graph {
     this.adjacencyList.get(edge.target)!.inEdges.delete(edge.source);
 
     this.eventManager.trigger("EdgeRemoved", { id: edge._id });
-  }
-
-  on(event: GraphEvent, callback: GraphEventCallback): void {
-    this.eventManager.on(event, callback);
-  }
-
-  off(event: GraphEvent, callback: GraphEventCallback): void {
-    this.eventManager.off(event, callback);
   }
 
   static isEdgeId(id: string): boolean {
@@ -338,10 +320,6 @@ export class Graph {
       this.adjacencyList.get(nodeId)!.inEdges.size > 0 ||
       this.adjacencyList.get(nodeId)!.outEdges.size > 0
     );
-  }
-
-  getParamManager(): ParameterManager {
-    return this.paramManager;
   }
 
   /**

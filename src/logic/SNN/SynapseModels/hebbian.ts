@@ -2,14 +2,11 @@
 
 import { SynapseModel } from "./Interface";
 
-import { Graph } from "../../../core/Graph";
 import { ParameterManager } from "../../../core/ParameterManager";
 
 export class EdgeHebbianParamRegistry {
-  private graph: Graph;
   private edgeParamManager: ParameterManager;
-  constructor(graph: Graph, edgeParamManager: ParameterManager) {
-    this.graph = graph;
+  constructor(edgeParamManager: ParameterManager) {
     this.edgeParamManager = edgeParamManager;
   }
 
