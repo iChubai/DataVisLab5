@@ -18,8 +18,8 @@ export class Neuron {
     this.model = model;
   }
 
-  update(deltaTime: number, inputs: number): void {
-    this.model.update(deltaTime, this._id, inputs);
+  update(deltaTime: number, inputs: number): boolean {
+    return this.model.update(deltaTime, this._id, inputs);
   }
 
   isSpiking(): boolean {
@@ -164,40 +164,12 @@ export class SNNModel {
   public update(deltaTime: number): void {
     // console.log(`SNN Update: deltaTime = ${deltaTime}`); // FIXME: remove this line
 
-    const spikings = new Map<string, boolean>();
-    this.neurons.forEach((neuron) => {
-      spikings.set(neuron._id, neuron.isSpiking());
-    });
-
-    const inputs = new Map<string, number>();
-    this.synapses.forEach((synapse) => {
-      const sourceNeuron = this.neurons.get(synapse.source)!;
-      const targetNeuron = this.neurons.get(synapse.target)!;
-
-      const sourceSpiking = spikings.get(synapse.source) ?? false;
-      const targetSpiking = spikings.get(synapse.target) ?? false;
-
-      const weight = synapse.getWeight();
-
-      console.log(`source: ${synapse.source}, source spiking: ${sourceSpiking}, weight: ${weight}`); // FIXME: remove this line
-
-      // 更新 inputs
-      const targetId = synapse.target;
-      if (inputs.has(targetId)) {
-        const currentValue = inputs.get(targetId)!;
-        inputs.set(targetId, currentValue + (sourceSpiking ? weight : 0)); // 只有在源神经元发Spike时才累加权重
-      } else {
-        inputs.set(targetId, sourceSpiking ? weight : 0);
-      }
-
-      // 更新突触权重
-      synapse.update(0, sourceSpiking, targetSpiking);
-    });
+    const inputss = this.getInputValuess();
 
     this.neurons.forEach((neuron) => {
-      const input = inputs.get(neuron._id) || 0;
-      neuron.update(deltaTime, input);
-      if (neuron.isSpiking()) {
+      const inputs = inputss.get(neuron._id) || 0;
+      const fired = neuron.update(deltaTime, inputs);
+      if (fired) {
         this.eventManager.trigger("Spike", { itemId: neuron._id });
         console.log(`[SNNModel] Spike: ${neuron._id}`); // FIXME: remove this line
       } else {
@@ -224,12 +196,21 @@ export class SNNModel {
       const sourceNeuron = this.neurons.get(edge.source);
 
       if (synapse && sourceNeuron) {
-        const sourceSpiking = sourceNeuron.isSpiking();
-        totalInput += sourceSpiking ? synapse.getWeight() : 0;
-        console.log(sourceNeuron, sourceSpiking, totalInput, edge._id); // FIXME: remove this line
+        const sourceFired = sourceNeuron.isSpiking();
+        totalInput += sourceFired ? synapse.getWeight() : 0;
       }
     }
 
     return totalInput;
+  }
+
+  private getInputValuess(): Map<string, number> {
+    const inputValues = new Map<string, number>();
+    this.neurons.forEach((neuron) => {
+      console.log(neuron);
+      inputValues.set(neuron._id, this.computeNeuronInputs(neuron._id));
+    });
+    console.log(inputValues); // FIXME: remove this line
+    return inputValues;
   }
 }

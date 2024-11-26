@@ -73,11 +73,11 @@ export class ChartRender {
   registerCallbacks(canvasEventManager: CanvasEventManager): void {
     canvasEventManager.on("NodeClicked", (event, nodeId) => {
       if (nodeId === undefined) throw new Error("this should not happen: nodeId is undefined");
-      this.select(nodeId).start(Date.now());
+      this.setYParam("potential").select(nodeId).start(Date.now()); // TODO: 写一个设置显示哪个参数的方法。
     });
     canvasEventManager.on("EdgeClicked", (event, edgeId) => {
       if (edgeId === undefined) throw new Error("this should not happen: edgeId is undefined");
-      this.select(edgeId).start(Date.now());
+      this.setYParam("weight").select(edgeId).start(Date.now()); // TODO: 写一个设置显示哪个参数的方法。
     });
     canvasEventManager.on("CanvasClicked", (event) => {
       this.itemId = "";

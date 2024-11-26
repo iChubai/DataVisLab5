@@ -88,8 +88,6 @@ export class NodeLIFParamRegistry {
 export class LIFNeuronModel extends NeuronModel {
   private params: ParameterManager;
 
-  private spiking: boolean;
-
   /**
    * 创建 LIF 神经元模型。
    *
@@ -102,8 +100,6 @@ export class LIFNeuronModel extends NeuronModel {
   constructor(parameterManager: ParameterManager) {
     super();
     this.params = parameterManager;
-
-    this.spiking = false;
   }
 
   /**
@@ -113,20 +109,23 @@ export class LIFNeuronModel extends NeuronModel {
    *
    * @param deltaTime 时间间隔
    * @param neuronId 神经元 ID
-   * @param inputs 神经元输入
+   * @param input 神经元输入
    * @returns 是否放电
    */
-  update(deltaTime: number, neuronId: string, inputs: number): boolean {
-    if (this.params.get(neuronId, "isInput"))
-      return (this.spiking =
-        this.params.get(neuronId, "potential") >= this.params.get(neuronId, "threshold"));
+  update(deltaTime: number, neuronId: string, input: number): void {
+    if (this.params.get(neuronId, "isInput")) {
+      const spiking =
+        this.params.get(neuronId, "potential") >= this.params.get(neuronId, "threshold");
+      this.params.set(neuronId, "isSpiking", spiking);
+      return;
+    }
 
     // potential = potential + (inputs - potential * recovery) * deltaTime
     const potential =
       this.params.get(neuronId, "potential") *
         Math.exp(-deltaTime / this.params.get(neuronId, "recovery")) +
       this.params.get(neuronId, "resistance") *
-        inputs *
+        input *
         (1 - Math.exp(-deltaTime / this.params.get(neuronId, "recovery")));
     this.params.set(neuronId, "potential", potential);
 
@@ -134,14 +133,16 @@ export class LIFNeuronModel extends NeuronModel {
     const threshold = this.params.get(neuronId, "threshold");
     if (potential >= threshold) {
       this.reset(neuronId);
-      return (this.spiking = true); // 放电
+      this.params.set(neuronId, "isSpiking", true); // 放电
+      return;
     }
 
-    return (this.spiking = false); // 未放电
+    this.params.set(neuronId, "isSpiking", false); // 未放电
+    return;
   }
 
-  isSpiking(): boolean {
-    return this.spiking;
+  isSpiking(neuronId: string): boolean {
+    return this.params.get(neuronId, "isSpiking");
   }
 
   getPotential(neuronId: string): number {

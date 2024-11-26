@@ -173,6 +173,7 @@ export class NodeParameterRegistry {
     this.nodePhysicParamRegistry.register("x", "y", "vx", "vy", "radius");
     this.nodeSNNParamRegistry.register(
       "isInput",
+      "isSpiking",
       "potential",
       "threshold",
       "recovery",

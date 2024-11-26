@@ -30,6 +30,7 @@ export class NodeSNNParameterRegistry {
    * - 通用参数：
    *    - `isInput`: 节点是否是输入节点，初始值为 false。
    *        当节点是输入节点时，其电位将被固定为设定值。
+   *    - `isSpiking`: boolean - 节点是否正在发放脉冲，初始值为 false。
    * - LIF 模型：
    *    - `potential`: 节点的电位，初始值为 0。
    *    - `threshold`: 节点的阈值，初始值为 1。
@@ -37,7 +38,7 @@ export class NodeSNNParameterRegistry {
    *    - `resistance`: 节点的输入电阻，初始值为 1。
    */
   register(...params: string[]): void {
-    ["isInput"].forEach((param) => {
+    ["isInput", "isSpiking"].forEach((param) => {
       if (params.includes(param)) {
         if (this.parameterManager.existNodeParam(param)) {
           console.warn(`Node parameter ${param} already exists, skip.`);
@@ -56,6 +57,16 @@ export class NodeSNNParameterRegistry {
               },
             });
             break;
+          case "isSpiking":
+            this.parameterManager.addNodeParam({
+              name: "isSpiking",
+              type: "boolean",
+              value: false,
+              isChanganble: false,
+              onChange: (nodeId, newValue) => {
+                // console.log(`Node ${nodeId} isSpiking changing to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
+              },
+            });
           default:
             break;
         }

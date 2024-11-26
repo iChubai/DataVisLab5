@@ -5,10 +5,10 @@ export abstract class NeuronModel {
   /**
    * 更新神经元状态。
    * @param deltaTime - 时间步长。
-   * @param inputs - 输入电流或影响状态的参数。
+   * @param input - 输入电流或影响状态的参数。
    * @returns {boolean} - 是否放电（true 表示放电）。
    */
-  abstract update(deltaTime: number, neuronId: string, inputs: number): boolean;
+  abstract update(deltaTime: number, neuronId: string, input: number): void;
 
   abstract isSpiking(neuronId: string): boolean;
 
