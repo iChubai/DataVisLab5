@@ -54,7 +54,7 @@ export class NodeLIFParamRegistry {
           this.nodeParamManager.addNodeParam({
             name: "recovery",
             type: "number",
-            value: 0.1,
+            value: 0.5,
             isChanganble: true,
             onChange: (nodeId, newValue) => {
               // TODO
@@ -66,7 +66,7 @@ export class NodeLIFParamRegistry {
           this.nodeParamManager.addNodeParam({
             name: "resistance",
             type: "number",
-            value: 1,
+            value: 2.5,
             isChanganble: true,
             onChange: (nodeId, newValue) => {
               // TODO
@@ -88,6 +88,8 @@ export class NodeLIFParamRegistry {
 export class LIFNeuronModel extends NeuronModel {
   private params: ParameterManager;
 
+  private spiking: boolean;
+
   /**
    * 创建 LIF 神经元模型。
    *
@@ -97,14 +99,11 @@ export class LIFNeuronModel extends NeuronModel {
    * - threshold: number - 阈值，默认 1。
    * - recovery: number - 恢复时间常数，默认 0.1。
    */
-  constructor(
-    parameterManager: ParameterManager,
-    threshold: number = 1,
-    recovery: number = 0.1,
-    resistance: number = 1
-  ) {
+  constructor(parameterManager: ParameterManager) {
     super();
     this.params = parameterManager;
+
+    this.spiking = false;
   }
 
   /**
@@ -118,21 +117,31 @@ export class LIFNeuronModel extends NeuronModel {
    * @returns 是否放电
    */
   update(deltaTime: number, neuronId: string, inputs: number): boolean {
+    if (this.params.get(neuronId, "isInput"))
+      return (this.spiking =
+        this.params.get(neuronId, "potential") >= this.params.get(neuronId, "threshold"));
+
     // potential = potential + (inputs - potential * recovery) * deltaTime
     const potential =
-      this.params.get(neuronId, "potential") +
-      (inputs - this.params.get(neuronId, "potential") * this.params.get(neuronId, "recovery")) *
-        deltaTime;
+      this.params.get(neuronId, "potential") *
+        Math.exp(-deltaTime / this.params.get(neuronId, "recovery")) +
+      this.params.get(neuronId, "resistance") *
+        inputs *
+        (1 - Math.exp(-deltaTime / this.params.get(neuronId, "recovery")));
     this.params.set(neuronId, "potential", potential);
 
     // 检查是否放电
     const threshold = this.params.get(neuronId, "threshold");
     if (potential >= threshold) {
       this.reset(neuronId);
-      return true; // 放电
+      return (this.spiking = true); // 放电
     }
 
-    return false; // 未放电
+    return (this.spiking = false); // 未放电
+  }
+
+  isSpiking(): boolean {
+    return this.spiking;
   }
 
   getPotential(neuronId: string): number {

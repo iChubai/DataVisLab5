@@ -83,10 +83,11 @@ export class HebbianSynapseModel extends SynapseModel {
    * Hebbian 学习规则：∆w = learningRate * deltaTime
    * @param deltaTime - 时间步长。
    */
-  update(deltaTime: number, synapseId: string): void {
-    // weight += learningRate * deltaTime
+  update(deltaTime: number, synapseId: string, sourceFired: boolean, targetFired: boolean): void {
+    const activity = sourceFired && targetFired ? 1 : 0;
     const weight =
-      this.params.get(synapseId, "weight") + this.params.get(synapseId, "learningRate") * deltaTime;
+      this.params.get(synapseId, "weight") +
+      activity * this.params.get(synapseId, "learningRate") * deltaTime;
     this.params.set(synapseId, "weight", weight);
   }
 

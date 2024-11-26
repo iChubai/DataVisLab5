@@ -1,4 +1,3 @@
-import { Graph } from "../../core/Graph";
 import { ParameterManager } from "../../core/ParameterManager";
 
 import { NodeLIFParamRegistry } from "./NeuronModels/lif";
@@ -13,7 +12,7 @@ import { EdgeHebbianParamRegistry } from "./SynapseModels/hebbian";
 export class NodeSNNParameterRegistry {
   private paramRegistry: NodeLIFParamRegistry; // TODO: support other neuron models
 
-  constructor(parameterManager: ParameterManager, neuronModel: string) {
+  constructor(private parameterManager: ParameterManager, neuronModel: string) {
     this.paramRegistry =
       {
         LIF: new NodeLIFParamRegistry(parameterManager),
@@ -28,6 +27,9 @@ export class NodeSNNParameterRegistry {
    * @param params - 神经元参数名称列表。
    *
    * 支持的参数：
+   * - 通用参数：
+   *    - `isInput`: 节点是否是输入节点，初始值为 false。
+   *        当节点是输入节点时，其电位将被固定为设定值。
    * - LIF 模型：
    *    - `potential`: 节点的电位，初始值为 0。
    *    - `threshold`: 节点的阈值，初始值为 1。
@@ -35,6 +37,30 @@ export class NodeSNNParameterRegistry {
    *    - `resistance`: 节点的输入电阻，初始值为 1。
    */
   register(...params: string[]): void {
+    ["isInput"].forEach((param) => {
+      if (params.includes(param)) {
+        if (this.parameterManager.existNodeParam(param)) {
+          console.warn(`Node parameter ${param} already exists, skip.`);
+          return;
+        }
+        switch (param) {
+          case "isInput":
+            this.parameterManager.addNodeParam({
+              name: "isInput",
+              type: "boolean",
+              value: false,
+              isChanganble: true,
+              onChange: (nodeId, newValue) => {
+                console.log(`Node ${nodeId} potential changing to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
+                this.parameterManager.setChangeable(nodeId, "potential", !newValue);
+              },
+            });
+            break;
+          default:
+            break;
+        }
+      }
+    });
     this.paramRegistry.register(...params);
   }
 }

@@ -2,6 +2,7 @@ import { NodeBasicParamRegistry, EdgeBasicParamRegistry } from "./Graph";
 import { NodePhysicParamRegistry } from "../logic/Force/Simulator";
 import { NodeSNNParameterRegistry, EdgeSNNParameterRegistry } from "../logic/SNN/ParameterRegister";
 import { GraphEventManager } from "./Graph/EventManager";
+import { GUIController } from "../gui/controller";
 
 /**
  * 描述单个节点参数的结构。
@@ -28,7 +29,7 @@ export class ParameterManager {
   private initialEdgeParameters: Parameter[]; // 初始边参数列表。在边创建时，会将初始参数列表复制到边参数列表中。
   private Parameters: Map<string, Parameter[]>; // 节点/边 ID -> 参数列表
 
-  constructor() {
+  constructor(private controller: GUIController) {
     this.initialNodeParameters = [];
     this.initialEdgeParameters = [];
     this.Parameters = new Map();
@@ -37,7 +38,13 @@ export class ParameterManager {
   registerCallbacks(graphEventManager: GraphEventManager) {
     graphEventManager.on("NodeAdded", (nodeId) => {
       // this.nodeParameters.set(nodeId, this.initialParameters.slice()); 这是浅拷贝，不对。
-      this.Parameters.set(nodeId, JSON.parse(JSON.stringify(this.initialNodeParameters))); // 这里用深拷贝
+      // this.Parameters.set(nodeId, JSON.parse(JSON.stringify(this.initialNodeParameters))); // 这里用深拷贝 // 但是也不对。
+      const newParameters = this.initialNodeParameters.map((param) => ({
+        ...param, // 浅拷贝所有属性
+        options: param.options ? [...param.options] : undefined, // 确保深拷贝数组
+      }));
+      this.Parameters.set(nodeId, newParameters);
+
       console.log(
         `NodeParameterManager: Node added: ${nodeId} with parameters: `,
         this.Parameters.get(nodeId)
@@ -100,6 +107,26 @@ export class ParameterManager {
     if (parameter === undefined)
       throw new Error(`NodeParameterManager: Parameter ${parameterName} unfound in node ${Id}.`);
     parameter.value = value;
+    this.controller.panelEvent().trigger("UpdateParameter", { paramName: parameterName, id: Id });
+  }
+
+  getChangeable(Id: string, parameterName: string): boolean {
+    const parameters = this.Parameters.get(Id);
+    if (parameters === undefined) throw new Error(`NodeParameterManager: Node ${Id} unfound.`);
+    const parameter = parameters.find((p) => p.name === parameterName);
+    if (parameter === undefined)
+      throw new Error(`NodeParameterManager: Parameter ${parameterName} unfound in node ${Id}.`);
+    return parameter.isChanganble;
+  }
+
+  setChangeable(Id: string, parameterName: string, isChanganble: boolean): void {
+    const parameters = this.Parameters.get(Id);
+    if (parameters === undefined) throw new Error(`NodeParameterManager: Node ${Id} unfound.`);
+    const parameter = parameters.find((p) => p.name === parameterName);
+    if (parameter === undefined)
+      throw new Error(`NodeParameterManager: Parameter ${parameterName} unfound in node ${Id}.`);
+    parameter.isChanganble = isChanganble;
+    this.controller.panelEvent().trigger("UpdateParameter", { paramName: parameterName, id: Id });
   }
 
   /**
@@ -144,7 +171,13 @@ export class NodeParameterRegistry {
   registerAll() {
     this.nodeBasicParamRegistry.register("info");
     this.nodePhysicParamRegistry.register("x", "y", "vx", "vy", "radius");
-    this.nodeSNNParamRegistry.register("potential", "threshold", "recovery", "resistance");
+    this.nodeSNNParamRegistry.register(
+      "isInput",
+      "potential",
+      "threshold",
+      "recovery",
+      "resistance"
+    );
     // TODO
 
     console.log("NodeParameterRegistry: All parameters registered.", this.parameterManager);

@@ -22,6 +22,10 @@ export class Neuron {
     return this.model.update(deltaTime, this._id, inputs);
   }
 
+  isSpiking(): boolean {
+    return this.model.isSpiking(this._id);
+  }
+
   getPotential(): number {
     return this.model.getPotential(this._id);
   }
@@ -49,8 +53,8 @@ export class Synapse {
    * @param deltaTime - 时间步长。
    * @returns 突触权重。
    */
-  update(deltaTime: number): void {
-    this.model.update(deltaTime, this._id);
+  update(deltaTime: number, sourceFired: boolean, targetFired: boolean): void {
+    this.model.update(deltaTime, this._id, sourceFired, targetFired);
   }
 
   getWeight(): number {
@@ -172,7 +176,10 @@ export class SNNModel {
     });
 
     this.synapses.forEach((synapse) => {
-      synapse.update(deltaTime);
+      const sourceNeuron = this.neurons.get(synapse.source)!;
+      const targetNeuron = this.neurons.get(synapse.target)!;
+
+      synapse.update(deltaTime, sourceNeuron.isSpiking(), targetNeuron.isSpiking());
       const weight = synapse.getWeight();
       // console.log(`Synapse ${synapse.source} -> ${synapse.target} | Weight: ${weight.toFixed(3)}`); // FIXME: remove this line
     });
@@ -184,8 +191,11 @@ export class SNNModel {
 
     for (const edge of sourceEdges) {
       const synapse = this.synapses.get(edge._id);
-      if (synapse) {
-        totalInput += synapse.getWeight();
+      const sourceNeuron = this.neurons.get(edge.source);
+
+      if (synapse && sourceNeuron) {
+        const sourceFired = sourceNeuron.getPotential() > 0;
+        totalInput += sourceFired ? synapse.getWeight() : 0;
       }
     }
 

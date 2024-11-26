@@ -19,11 +19,5 @@ document.addEventListener("submit", (e) => {
 
 const svg = document.querySelector("#graphCanvas") as SVGSVGElement;
 const chart = d3.select("#chart") as d3.Selection<SVGGElement, unknown, any, any>;
-const params = new ParameterManager();
 
-const nodeParamRegistry: NodeParameterRegistry = new NodeParameterRegistry(params);
-nodeParamRegistry.registerAll(); // 注册节点参数
-const edgeParamRegistry: EdgeParameterRegistry = new EdgeParameterRegistry(params);
-edgeParamRegistry.registerAll(); // 注册边参数
-
-const controller: GUIController = new GUIController(svg, chart, params);
+const controller: GUIController = new GUIController(svg, chart);

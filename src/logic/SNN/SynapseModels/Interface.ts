@@ -6,7 +6,12 @@ export abstract class SynapseModel {
    * 更新突触权重。
    * @param deltaTime - 时间步长。
    */
-  abstract update(deltaTime: number, synapseId: string): void;
+  abstract update(
+    deltaTime: number,
+    synapseId: string,
+    sourceFired: boolean,
+    targetFired: boolean
+  ): void;
 
   /**
    * 获取当前突触权重。
