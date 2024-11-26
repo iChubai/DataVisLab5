@@ -9,7 +9,7 @@ const NODE_DEFAULT_RADIUS = 20; // 节点的默认半径
  * 鼠标事件管理器，负责处理与鼠标相关的操作，包括点击、拖拽和按住操作。
  */
 export class CanvasEventAnalyst {
-  private readonly HOLD_THRESHOLD = 300; // 按住判定阈值（毫秒）
+  private readonly HOLD_THRESHOLD = 200; // 按住判定阈值（毫秒）
 
   private isMouseDown: boolean = false; // 记录鼠标按下状态
   private mouseDownStartTime: number = 0; // 记录鼠标按下的时间

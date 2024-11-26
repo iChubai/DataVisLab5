@@ -4,6 +4,7 @@ import { ParameterManager } from "../../core/ParameterManager";
 import { GUIController } from "../controller";
 import { CanvasEventAnalyst } from "../Canvas/Event/Analyst";
 import { CanvasEventManager } from "../Canvas/Event/Manager";
+import { GraphEventManager } from "../../core/Graph/EventManager";
 
 export class ChartRender {
   // 数据存储和曲线更新
@@ -70,7 +71,10 @@ export class ChartRender {
    * 还没想好这个模块应该归哪个模块管，所以干脆都写了，参数用哪个都行。
    * @param item
    */
-  registerCallbacks(canvasEventManager: CanvasEventManager): void {
+  registerCallbacks(
+    canvasEventManager: CanvasEventManager,
+    graphEventManager: GraphEventManager
+  ): void {
     canvasEventManager.on("NodeClicked", (event, nodeId) => {
       if (nodeId === undefined) throw new Error("this should not happen: nodeId is undefined");
       this.setYParam("potential").select(nodeId).start(Date.now()); // TODO: 写一个设置显示哪个参数的方法。
@@ -80,10 +84,14 @@ export class ChartRender {
       this.setYParam("weight").select(edgeId).start(Date.now()); // TODO: 写一个设置显示哪个参数的方法。
     });
     canvasEventManager.on("CanvasClicked", (event) => {
-      this.itemId = "";
-      this.startTime = 0;
-      this.data = [];
-      this.path.datum([]).attr("d", this.line);
+      this.clear(); // 点击背景时清空图表
+    });
+
+    graphEventManager.on("NodeRemoved", (nodeId) => {
+      if (this.itemId === nodeId) this.clear(); // 节点删除时清空图表
+    });
+    graphEventManager.on("EdgeRemoved", (edgeId) => {
+      if (this.itemId === edgeId) this.clear(); // 边删除时清空图表
     });
   }
 
@@ -133,5 +141,19 @@ export class ChartRender {
     this.yAxisGroup.call(this.yAxis);
     this.path.datum(this.data).attr("d", this.line);
     // 注：上面这行会在每次更新select后第一次update的时候报一下错，猜测是因为第一组数据点没有生成。
+  }
+
+  /**
+   * 清空图表（包括坐标轴、路径等）。
+   * 用于在节点删除时防止进一步绘制。
+   */
+  clear(): void {
+    this.itemId = "";
+    this.paramId = "";
+    this.startTime = 0;
+    this.data = [];
+    this.path.datum([]).attr("d", this.line);
+    this.xAxisGroup.selectAll("*").remove();
+    this.yAxisGroup.selectAll("*").remove();
   }
 }

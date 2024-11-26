@@ -84,7 +84,7 @@ export class GUIController {
     );
 
     this.panelRender.registerCallbacks(this.canvasEventManager, this.panelEventManager);
-    this.chartRender.registerCallbacks(this.canvasEventManager);
+    this.chartRender.registerCallbacks(this.canvasEventManager, this.graphEventManager);
     this.params.registerCallbacks(this.graphEventManager);
     this.graph.registerCallbacks(this.canvasEventManager);
     this.forceSimulation.registerCallbacks(this.graphEventManager, this.snnEventManager);
