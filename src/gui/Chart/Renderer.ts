@@ -117,8 +117,6 @@ export class ChartRender {
       return;
     }
     this.startTime = startTime;
-
-    console.log("recent data: ", this.data); // FIXME: remove this line
     this.data = [];
   }
 
@@ -133,7 +131,6 @@ export class ChartRender {
     const time = currentTime - this.startTime;
     const potential = this.parameterManager.get(this.itemId, this.paramId) as number;
     this.data.push([time, potential]);
-    // console.log("data stored: ", time, potential); // DONE: remove this line
     if (this.data.length > 100) this.data.shift(); // 保持固定长度
 
     // 更新图像

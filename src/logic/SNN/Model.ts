@@ -162,8 +162,6 @@ export class SNNModel {
   }
 
   public update(deltaTime: number): void {
-    // console.log(`SNN Update: deltaTime = ${deltaTime}`); // FIXME: remove this line
-
     const spikings = new Map<string, boolean>();
     this.neurons.forEach((neuron) => {
       spikings.set(neuron._id, neuron.isSpiking());
@@ -178,8 +176,6 @@ export class SNNModel {
       const targetSpiking = spikings.get(synapse.target) ?? false;
 
       const weight = synapse.getWeight();
-
-      console.log(`source: ${synapse.source}, source spiking: ${sourceSpiking}, weight: ${weight}`); // FIXME: remove this line
 
       // 更新 inputs
       const targetId = synapse.target;
@@ -199,7 +195,6 @@ export class SNNModel {
       neuron.update(deltaTime, input);
       if (neuron.isSpiking()) {
         this.eventManager.trigger("Spike", { itemId: neuron._id });
-        console.log(`[SNNModel] Spike: ${neuron._id}`); // FIXME: remove this line
       } else {
         this.eventManager.trigger("Reset", { itemId: neuron._id });
       }
@@ -211,7 +206,6 @@ export class SNNModel {
 
       synapse.update(deltaTime, sourceNeuron.isSpiking(), targetNeuron.isSpiking());
       const weight = synapse.getWeight();
-      // console.log(`Synapse ${synapse.source} -> ${synapse.target} | Weight: ${weight.toFixed(3)}`); // FIXME: remove this line
     });
   }
 
