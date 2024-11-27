@@ -3,6 +3,7 @@
 import { SynapseModel } from "./Interface";
 
 import { ParameterManager } from "../../../core/ParameterManager";
+import { Graph } from "../../../core/Graph";
 
 export class EdgeHebbianParamRegistry {
   private edgeParamManager: ParameterManager;
@@ -82,8 +83,17 @@ export class HebbianSynapseModel extends SynapseModel {
    * 根据 Hebbian 学习规则更新突触权重。
    * Hebbian 学习规则：∆w = learningRate * deltaTime
    * @param deltaTime - 时间步长。
+   * @param synapseId - 突触 ID。
+   * @param sourceFired - 源神经元是否激活。
+   * @param targetFired - 目标神经元是否激活。
    */
   update(deltaTime: number, synapseId: string, sourceFired: boolean, targetFired: boolean): void {
+    const sourceId = Graph.getSourceId(synapseId);
+    if (this.params.get(sourceId, "isInput")) {
+      this.params.set(synapseId, "weight", this.params.get(sourceId, "potential"));
+      return;
+    }
+
     const activity = sourceFired && targetFired ? 1 : 0;
     const weight =
       this.params.get(synapseId, "weight") +

@@ -66,7 +66,7 @@ export class NodeLIFParamRegistry {
           this.nodeParamManager.addNodeParam({
             name: "resistance",
             type: "number",
-            value: 2.5,
+            value: 3,
             isChanganble: true,
             onChange: (nodeId, newValue) => {
               // TODO
@@ -93,9 +93,9 @@ export class LIFNeuronModel extends NeuronModel {
    *
    * 使用变量：
    * - potential: number - 膜电位，默认 0。
-   * - resistance: number - 输入电阻，默认 1。
+   * - resistance: number - 输入电阻，默认 3。越大则输入越小。
    * - threshold: number - 阈值，默认 1。
-   * - recovery: number - 恢复时间常数，默认 0.1。
+   * - recovery: number - 恢复时间常数，默认 0.1。越大则需要越长时间才能恢复。
    */
   constructor(parameterManager: ParameterManager) {
     super();
@@ -114,13 +114,12 @@ export class LIFNeuronModel extends NeuronModel {
    */
   update(deltaTime: number, neuronId: string, input: number): void {
     if (this.params.get(neuronId, "isInput")) {
-      const spiking =
-        this.params.get(neuronId, "potential") >= this.params.get(neuronId, "threshold");
-      this.params.set(neuronId, "isSpiking", spiking);
+      this.params.set(neuronId, "isSpiking", true);
       return;
     }
 
-    // potential = potential + (inputs - potential * recovery) * deltaTime
+    // potential = potential * exp(-dt/recovery) + resistance * input * (1 - exp(-dt/recovery))
+    // here input is current intensity (I) but not potential (V)
     const potential =
       this.params.get(neuronId, "potential") *
         Math.exp(-deltaTime / this.params.get(neuronId, "recovery")) +
