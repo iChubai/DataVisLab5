@@ -25,9 +25,10 @@ export class ChartRender {
   private yAxis: d3.Axis<d3.NumberValue>;
   private xAxisGroup: d3.Selection<SVGGElement, unknown, any, any>;
   private yAxisGroup: d3.Selection<SVGGElement, unknown, any, any>;
+  MAX_DATA_LENGTH: number = 100;
 
   constructor(
-    private parameterManager: ParameterManager,
+    private params: ParameterManager,
     private chart: d3.Selection<SVGGElement, unknown, any, any>
   ) {
     this.data = [];
@@ -123,15 +124,19 @@ export class ChartRender {
   update(currentTime: number): void {
     if (this.itemId === "" || this.paramId === "" || this.startTime === 0) return; // 还没开始
 
+    const time = currentTime - this.startTime;
+    const value = this.params.get(this.itemId, this.paramId) as number;
+    this.data.push([time, value]);
+    if (this.data.length > this.MAX_DATA_LENGTH) this.data.shift(); // 保持固定长度
+
+    this.draw();
+  }
+
+  draw(): void {
     const xExtent = d3.extent(this.data, (d) => d[0]) as [number, number];
     const yExtent = d3.extent(this.data, (d) => d[1]) as [number, number];
     this.xScale.domain(xExtent);
     this.yScale.domain(yExtent);
-
-    const time = currentTime - this.startTime;
-    const potential = this.parameterManager.get(this.itemId, this.paramId) as number;
-    this.data.push([time, potential]);
-    if (this.data.length > 100) this.data.shift(); // 保持固定长度
 
     // 更新图像
     this.xAxisGroup.call(this.xAxis);

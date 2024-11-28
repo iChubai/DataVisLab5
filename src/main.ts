@@ -8,6 +8,7 @@ import {
   EdgeParameterRegistry,
   ParameterManager,
 } from "./core/ParameterManager.js";
+import { S } from "vite/dist/node/types.d-aGj9QkWt.js";
 
 /**
  * 主模块入口，用于初始化图形控制器并绑定到页面上的 SVG 元素。
@@ -19,5 +20,6 @@ document.addEventListener("submit", (e) => {
 
 const svg = document.querySelector("#graphCanvas") as SVGSVGElement;
 const chart = d3.select("#chart") as d3.Selection<SVGGElement, unknown, any, any>;
+const heatmap = document.querySelector("#heatmap-container") as SVGSVGElement;
 
-const controller: GUIController = new GUIController(svg, chart);
+const controller: GUIController = new GUIController(svg, chart, heatmap);

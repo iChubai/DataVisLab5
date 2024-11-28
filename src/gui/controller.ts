@@ -16,6 +16,7 @@ import { SNNSimulator } from "../logic/SNN/Simulator";
 import { ChartRender } from "./Chart/Renderer";
 import { SNNEventManager } from "../logic/SNN/Event/Manager";
 import { PanelEventManager } from "./Panel/Event/Manager";
+import { HeatmapRender } from "./Heatmap/Renderer";
 
 /**
  * 控制图形的主要类，负责图形的管理、力学仿真和事件处理。
@@ -23,6 +24,11 @@ import { PanelEventManager } from "./Panel/Event/Manager";
 export class GUIController {
   private canvas: SVGSVGElement; // SVG容器
   private chart: d3.Selection<SVGGElement, unknown, any, any>; // 参数可视化容器
+  private heatmap: SVGSVGElement; // 热力图容器
+
+  private params: ParameterManager;
+  private graph: Graph;
+  private snn: SNNModel;
 
   private canvasEventManager: CanvasEventManager; // 鼠标事件管理器
   private canvasEventAnalyst: CanvasEventAnalyst; // 鼠标事件管理器。虽然这里提示这个东西没用过但是这个用来监听鼠标事件的
@@ -30,13 +36,12 @@ export class GUIController {
   private panelEventManager: PanelEventManager;
   private snnEventManager: SNNEventManager;
 
-  private forceSimulation: ForceSimulator; // 力学仿真器
   private panelRender: PanelRender; // 参数可视化绘制器
-  private graph: Graph;
-  private params: ParameterManager;
-  private snn: SNNModel;
-  private snnSimulator: SNNSimulator;
   private chartRender: ChartRender;
+  private heatmapRender: HeatmapRender;
+  private forceSimulation: ForceSimulator; // 力学仿真器
+  private snnSimulator: SNNSimulator;
+
   // private panel: SVGSVGElement;
 
   /**
@@ -45,8 +50,8 @@ export class GUIController {
    */
   constructor(
     canvas: SVGSVGElement,
-    chart: d3.Selection<SVGGElement, unknown, any, any>
-    // panel: SVGSVGElement,
+    chart: d3.Selection<SVGGElement, unknown, any, any>,
+    heatmap: SVGSVGElement
   ) {
     this.params = new ParameterManager(this);
     const nodeParamRegistry: NodeParameterRegistry = new NodeParameterRegistry(this.params);
@@ -56,10 +61,11 @@ export class GUIController {
 
     this.canvas = d3.select(canvas).style("background-color", "#f9f9f9").node() as SVGSVGElement;
     this.chart = chart.select("#chart-container") as d3.Selection<SVGGElement, unknown, any, any>;
-    // this.panel = panel
+    this.heatmap = heatmap;
 
     this.panelRender = new PanelRender(this.params);
     this.chartRender = new ChartRender(this.params, this.chart);
+    this.heatmapRender = new HeatmapRender(this.params, this.heatmap);
 
     this.graphEventManager = new GraphEventManager();
     this.canvasEventManager = new CanvasEventManager(this.canvas);
@@ -75,7 +81,7 @@ export class GUIController {
     );
     this.forceSimulation.applyDragBehavior(d3.select(this.canvas).selectAll("circle"));
     this.snn = new SNNModel(this.graph, this.params, this.snnEventManager, "LIF", "Hebbian");
-    this.snnSimulator = new SNNSimulator(this.snn, this.chartRender);
+    this.snnSimulator = new SNNSimulator(this.snn, this.chartRender, this.heatmapRender);
     this.snnSimulator.run();
     this.canvasEventAnalyst = new CanvasEventAnalyst(
       this.canvasEventManager,
@@ -85,6 +91,7 @@ export class GUIController {
 
     this.panelRender.registerCallbacks(this.canvasEventManager, this.panelEventManager);
     this.chartRender.registerCallbacks(this.canvasEventManager, this.graphEventManager);
+    this.heatmapRender.registerCallbacks(this.graphEventManager);
     this.params.registerCallbacks(this.graphEventManager);
     this.graph.registerCallbacks(this.canvasEventManager);
     this.forceSimulation.registerCallbacks(this.graphEventManager, this.snnEventManager);
