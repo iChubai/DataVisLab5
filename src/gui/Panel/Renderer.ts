@@ -148,8 +148,10 @@ export class PanelRender {
   }
   // 更新单个参数的值
   updateParameter(paramName: string) {
+    if (!this.currentItemId) return;
+
     const input = this.inputsMap.get(paramName);
-    const newValue = this.params.get(this.currentItemId!, paramName);
+    const newValue = this.params.get(this.currentItemId, paramName);
 
     if (!input) return;
 
@@ -165,10 +167,9 @@ export class PanelRender {
     }
 
     // 根据 isChangable 动态更新控件的禁用状态
-    if (this.currentItemId && this.params.getChangeable(this.currentItemId, paramName)) {
-      (input as HTMLInputElement | HTMLSelectElement).disabled = true;
-    } else {
-      (input as HTMLInputElement | HTMLSelectElement).disabled = false;
-    }
+    (input as HTMLInputElement | HTMLSelectElement).disabled = !this.params.getChangeable(
+      this.currentItemId,
+      paramName
+    );
   }
 }

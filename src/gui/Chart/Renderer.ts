@@ -82,7 +82,8 @@ export class ChartRender {
     });
     canvasEventManager.on("EdgeClicked", (event, edgeId) => {
       if (edgeId === undefined) throw new Error("this should not happen: edgeId is undefined");
-      this.setYParam("weight").select(edgeId).start(Date.now()); // TODO: 写一个设置显示哪个参数的方法。
+      this.setYParam("psc").select(edgeId).start(Date.now()); // TODO: 写一个设置显示哪个参数的方法。
+      // TODO: 点击边的时候，Hebbian和STDP显示weight，Exponential显示psc。
     });
     canvasEventManager.on("CanvasClicked", (event) => {
       this.clear(); // 点击背景时清空图表

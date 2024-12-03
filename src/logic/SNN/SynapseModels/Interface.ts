@@ -17,5 +17,5 @@ export abstract class SynapseModel {
    * 获取当前突触权重。
    * @returns {number} - 当前突触权重。
    */
-  abstract getWeight(synapseId: string): number;
+  abstract getPSC(synapseId: string): number;
 }

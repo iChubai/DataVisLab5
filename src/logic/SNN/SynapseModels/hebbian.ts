@@ -105,7 +105,7 @@ export class HebbianSynapseModel extends SynapseModel {
    * 获取突触权重。
    * @returns {number} 突触权重。
    */
-  getWeight(synapseId: string): number {
+  getPSC(synapseId: string): number {
     return this.params.get(synapseId, "weight");
   }
 

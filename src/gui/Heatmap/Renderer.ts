@@ -126,7 +126,12 @@ export class HeatmapRender {
     this.yScale.domain(this.itemIds);
 
     // 颜色映射
-    const colorScale = d3.scaleSequential(d3.interpolateViridis).domain([0, 1]);
+    const colorScale = d3
+      .scaleSequential(d3.interpolateViridis)
+      .domain([
+        this.params.get(this.itemIds[0], "v_rest"),
+        this.params.get(this.itemIds[0], "v_th"),
+      ]);
 
     // 清除之前的内容
     d3.select(this.svg).selectAll("*").remove();

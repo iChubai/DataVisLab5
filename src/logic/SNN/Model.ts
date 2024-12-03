@@ -8,6 +8,8 @@ import { NeuronModel } from "./NeuronModels/Interface";
 import { SynapseModel } from "./SynapseModels/Interface";
 import { GraphEventManager, GraphEvents } from "../../core/Graph/EventManager";
 import { SNNEventManager } from "./Event/Manager";
+import { STDPSynapseModel } from "./SynapseModels/STDP";
+import { ExponentialSynapseModel } from "./SynapseModels/Exponential";
 
 export class Neuron {
   _id: string;
@@ -57,8 +59,8 @@ export class Synapse {
     this.model.update(deltaTime, this._id, sourceFired, targetFired);
   }
 
-  getWeight(): number {
-    return this.model.getWeight(this._id);
+  getPSC(): number {
+    return this.model.getPSC(this._id);
   }
 }
 
@@ -92,13 +94,15 @@ export class SNNModel {
    *  - `LIF`：Leaky Integrate and Fire 神经元模型。
    * @param synapseModel - 突触模型。
    *  - `Hebbian`：Hebbian 突触模型。
+   *  - `STDP`：Spike-Timing Dependent Plasticity 突触模型。
+   *  - `Exp`：指数突触模型。
    */
   constructor(
     private graph: Graph,
     private params: ParameterManager,
     private eventManager: SNNEventManager,
     neuronModel: string | NeuronModel = "LIF",
-    synapseModel: string | SynapseModel = "Hebbian"
+    synapseModel: string | SynapseModel = "Exp"
   ) {
     this.neurons = new Map();
     this.synapses = new Map();
@@ -117,6 +121,8 @@ export class SNNModel {
       typeof synapseModel === "string"
         ? {
             Hebbian: new HebbianSynapseModel(this.params),
+            STDP: new STDPSynapseModel(this.params),
+            Exp: new ExponentialSynapseModel(this.params),
             // TODO: ...
           }[synapseModel] ||
           (() => {
@@ -161,6 +167,11 @@ export class SNNModel {
     this.synapses.delete(edgeId);
   }
 
+  /**
+   * 更新神经网络。
+   * @param deltaTime - 时间步长（ms）。
+   * @returns 神经网络的更新结果。
+   */
   public update(deltaTime: number): void {
     const spikings = new Map<string, boolean>();
     this.neurons.forEach((neuron) => {
@@ -175,15 +186,15 @@ export class SNNModel {
       const sourceSpiking = spikings.get(synapse.source) ?? false;
       const targetSpiking = spikings.get(synapse.target) ?? false;
 
-      const weight = synapse.getWeight();
+      const psc = synapse.getPSC();
 
       // 更新 inputs
       const targetId = synapse.target;
       if (inputs.has(targetId)) {
         const currentValue = inputs.get(targetId)!;
-        inputs.set(targetId, currentValue + (sourceSpiking ? weight : 0)); // 只有在源神经元发Spike时才累加权重
+        inputs.set(targetId, currentValue + psc); // 只有在源神经元发Spike时才累加权重
       } else {
-        inputs.set(targetId, sourceSpiking ? weight : 0);
+        inputs.set(targetId, psc);
       }
 
       // 更新突触权重
@@ -205,25 +216,7 @@ export class SNNModel {
       const targetNeuron = this.neurons.get(synapse.target)!;
 
       synapse.update(deltaTime, sourceNeuron.isSpiking(), targetNeuron.isSpiking());
-      const weight = synapse.getWeight();
+      const weight = synapse.getPSC();
     });
-  }
-
-  private computeNeuronInputs(neuronId: string): number {
-    const sourceEdges = this.graph.getSourceEdges(neuronId);
-    let totalInput = 0;
-
-    for (const edge of sourceEdges) {
-      const synapse = this.synapses.get(edge._id);
-      const sourceNeuron = this.neurons.get(edge.source);
-
-      if (synapse && sourceNeuron) {
-        const sourceSpiking = sourceNeuron.isSpiking();
-        totalInput += sourceSpiking ? synapse.getWeight() : 0;
-        console.log(sourceNeuron, sourceSpiking, totalInput, edge._id); // FIXME: remove this line
-      }
-    }
-
-    return totalInput;
   }
 }

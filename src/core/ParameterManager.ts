@@ -46,7 +46,7 @@ export class ParameterManager {
       this.Parameters.set(nodeId, newParameters);
 
       console.log(
-        `NodeParameterManager: Node added: ${nodeId} with parameters: `,
+        `[ParameterManager] Node added: ${nodeId} with parameters: `,
         this.Parameters.get(nodeId)
       );
     });
@@ -56,7 +56,7 @@ export class ParameterManager {
     graphEventManager.on("EdgeAdded", (edgeId) => {
       this.Parameters.set(edgeId, JSON.parse(JSON.stringify(this.initialEdgeParameters)));
       console.log(
-        `NodeParameterManager: Edge added: ${edgeId} with parameters: `,
+        `[ParameterManager] Edge added: ${edgeId} with parameters: `,
         this.Parameters.get(edgeId)
       );
     });
@@ -88,10 +88,10 @@ export class ParameterManager {
   // 仅被模拟器调用。
   get(Id: string, parameterName: string): any {
     const parameters = this.Parameters.get(Id) || [];
-    if (parameters === undefined) throw new Error(`NodeParameterManager: Node ${Id} unfound.`);
+    if (parameters === undefined) throw new Error(`[ParameterManager] Item ${Id} unfound.`);
     const parameter = parameters.find((p) => p.name === parameterName);
     if (parameter === undefined)
-      throw new Error(`NodeParameterManager: Parameter ${parameterName} unfound in node ${Id}.`);
+      throw new Error(`[ParameterManager] Parameter ${parameterName} unfound in Item ${Id}.`);
     return parameter?.value;
   }
 
@@ -102,52 +102,52 @@ export class ParameterManager {
   // 反而需要向参数面板通知参数值变化。
   set(Id: string, parameterName: string, value: any): void {
     const parameters = this.Parameters.get(Id);
-    if (parameters === undefined) throw new Error(`NodeParameterManager: Node ${Id} unfound.`);
+    if (parameters === undefined) throw new Error(`[ParameterManager] Item ${Id} unfound.`);
     const parameter = parameters.find((p) => p.name === parameterName);
     if (parameter === undefined)
-      throw new Error(`NodeParameterManager: Parameter ${parameterName} unfound in node ${Id}.`);
+      throw new Error(`[ParameterManager] Parameter ${parameterName} unfound in Item ${Id}.`);
     parameter.value = value;
     this.controller.panelEvent().trigger("UpdateParameter", { paramName: parameterName, id: Id });
   }
 
   getChangeable(Id: string, parameterName: string): boolean {
     const parameters = this.Parameters.get(Id);
-    if (parameters === undefined) throw new Error(`NodeParameterManager: Node ${Id} unfound.`);
+    if (parameters === undefined) throw new Error(`[ParameterManager] Item ${Id} unfound.`);
     const parameter = parameters.find((p) => p.name === parameterName);
     if (parameter === undefined)
-      throw new Error(`NodeParameterManager: Parameter ${parameterName} unfound in node ${Id}.`);
+      throw new Error(`[ParameterManager] Parameter ${parameterName} unfound in Item ${Id}.`);
     return parameter.isChanganble;
   }
 
   setChangeable(Id: string, parameterName: string, isChanganble: boolean): void {
     const parameters = this.Parameters.get(Id);
-    if (parameters === undefined) throw new Error(`NodeParameterManager: Node ${Id} unfound.`);
+    if (parameters === undefined) throw new Error(`[ParameterManager] Item ${Id} unfound.`);
     const parameter = parameters.find((p) => p.name === parameterName);
     if (parameter === undefined)
-      throw new Error(`NodeParameterManager: Parameter ${parameterName} unfound in node ${Id}.`);
+      throw new Error(`[ParameterManager] Parameter ${parameterName} unfound in Item ${Id}.`);
     parameter.isChanganble = isChanganble;
     this.controller.panelEvent().trigger("UpdateParameter", { paramName: parameterName, id: Id });
   }
 
   /**
    * 为指定节点/边注册一个新参数。
-   * @param nodeId - 节点 ID。
+   * @param itemId - 节点/边 ID。
    * @param parameter - 参数信息。
    */
-  registerToTarget(nodeId: string, parameter: Parameter): void {
-    if (!this.Parameters.has(nodeId)) {
-      this.Parameters.set(nodeId, []);
+  registerToTarget(itemId: string, parameter: Parameter): void {
+    if (!this.Parameters.has(itemId)) {
+      this.Parameters.set(itemId, []);
     }
-    this.Parameters.get(nodeId)!.push(parameter);
+    this.Parameters.get(itemId)!.push(parameter);
   }
 
   /**
    * 获取指定节点/边的所有参数。
-   * @param nodeId - 节点 ID。
+   * @param itemId - 节点 ID。
    * @returns {Parameter[]} 参数列表。
    */
-  getParametersFromTarget(nodeId: string): Parameter[] {
-    return this.Parameters.get(nodeId) || [];
+  getParametersFromTarget(itemId: string): Parameter[] {
+    return this.Parameters.get(itemId) || [];
   }
 }
 
@@ -174,10 +174,14 @@ export class NodeParameterRegistry {
     this.nodeSNNParamRegistry.register(
       "isInput",
       "isSpiking",
+
       "potential",
-      "threshold",
-      "recovery",
-      "resistance"
+      "lastSpikeTime",
+      "v_rest",
+      "v_th",
+      "tau_m",
+      "R",
+      "t_ref"
     );
     // TODO
 
@@ -196,13 +200,26 @@ export class EdgeParameterRegistry {
     this.parameterManager = parameterManager;
 
     this.edgeBasicParamRegistry = new EdgeBasicParamRegistry(parameterManager);
-    this.edgeSNNParamRegistry = new EdgeSNNParameterRegistry(parameterManager, "Hebbian");
+    this.edgeSNNParamRegistry = new EdgeSNNParameterRegistry(parameterManager, "Exp");
     // TODO
   }
 
   registerAll() {
     this.edgeBasicParamRegistry.register("info");
-    this.edgeSNNParamRegistry.register("weight", "learningRate");
+    this.edgeSNNParamRegistry.register(
+      // Hebbian & STDP
+      "weight",
+      "learningRate",
+      "tau_pre",
+      "tau_post",
+      "A_pre",
+      "A_post",
+
+      // Exponential
+      "psc",
+      "tau",
+      "weight"
+    );
     // TODO
 
     console.log("EdgeParameterRegistry: All parameters registered.", this.parameterManager);

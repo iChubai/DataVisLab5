@@ -24,7 +24,7 @@ export class SNNSimulator {
     let lastTime = Date.now();
     this.engine.on("tick", () => {
       const currentTime = Date.now();
-      const deltaTime = (currentTime - lastTime) / 1000;
+      const deltaTime = currentTime - lastTime;
       lastTime = currentTime;
 
       this.model.update(deltaTime);

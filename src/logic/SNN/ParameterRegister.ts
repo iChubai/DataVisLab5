@@ -1,7 +1,9 @@
 import { ParameterManager } from "../../core/ParameterManager";
 
 import { NodeLIFParamRegistry } from "./NeuronModels/lif";
+import { EdgeExponentialParamRegistry } from "./SynapseModels/Exponential";
 import { EdgeHebbianParamRegistry } from "./SynapseModels/hebbian";
+import { EdgeSTDPParamRegistry } from "./SynapseModels/STDP";
 
 /**
  * 注册 SNN 模块中的神经元参数。
@@ -53,7 +55,8 @@ export class NodeSNNParameterRegistry {
               isChanganble: true,
               onChange: (nodeId, newValue) => {
                 console.log(`Node ${nodeId} potential changing to ${newValue}`); // NOTE: 回调函数最好写一个log，方便调试
-                this.parameterManager.setChangeable(nodeId, "potential", !newValue);
+                this.parameterManager.setChangeable(nodeId, "potential", newValue);
+                this.parameterManager.set(nodeId, "potential", 0);
               },
             });
             break;
@@ -81,10 +84,15 @@ export class NodeSNNParameterRegistry {
  *
  * 支持的模型：
  * - `Hebbian`: Hebbian 突触模型。
+ * - `STDP`: STDP 突触模型。
  */
 export class EdgeSNNParameterRegistry {
   private parameterManager: ParameterManager;
-  private paramRegistry: EdgeHebbianParamRegistry; // TODO: support other synapse models
+  private paramRegistry:
+    | EdgeHebbianParamRegistry
+    | EdgeSTDPParamRegistry
+    | EdgeExponentialParamRegistry;
+  // TODO: support other synapse models
 
   constructor(parameterManager: ParameterManager, synapseModel: string) {
     this.parameterManager = parameterManager;
@@ -92,6 +100,9 @@ export class EdgeSNNParameterRegistry {
     this.paramRegistry =
       {
         Hebbian: new EdgeHebbianParamRegistry(parameterManager),
+        STDP: new EdgeSTDPParamRegistry(parameterManager),
+        Exp: new EdgeExponentialParamRegistry(parameterManager),
+        // TODO: support other synapse models
       }[synapseModel] ||
       (() => {
         throw new Error(`Unsupported synapse model ${synapseModel}.`);

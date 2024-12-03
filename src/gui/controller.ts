@@ -80,7 +80,7 @@ export class GUIController {
       this.canvasEventManager
     );
     this.forceSimulation.applyDragBehavior(d3.select(this.canvas).selectAll("circle"));
-    this.snn = new SNNModel(this.graph, this.params, this.snnEventManager, "LIF", "Hebbian");
+    this.snn = new SNNModel(this.graph, this.params, this.snnEventManager, "LIF", "Exp");
     this.snnSimulator = new SNNSimulator(this.snn, this.chartRender, this.heatmapRender);
     this.snnSimulator.run();
     this.canvasEventAnalyst = new CanvasEventAnalyst(
