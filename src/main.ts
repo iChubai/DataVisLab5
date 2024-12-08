@@ -19,7 +19,8 @@ document.addEventListener("submit", (e) => {
 });
 
 const svg = document.querySelector("#graphCanvas") as SVGSVGElement;
-const chart = d3.select("#chart") as d3.Selection<SVGGElement, unknown, any, any>;
+const paramChart = d3.select("#chart") as d3.Selection<SVGGElement, unknown, any, any>;
 const heatmap = document.querySelector("#heatmap-container") as SVGSVGElement;
+const spikeChart = document.querySelector("#spike-chart-svg") as SVGSVGElement;
 
-const controller: GUIController = new GUIController(svg, chart, heatmap);
+const controller: GUIController = new GUIController(svg, paramChart, heatmap, spikeChart);

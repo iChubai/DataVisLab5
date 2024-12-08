@@ -219,4 +219,8 @@ export class SNNModel {
       const weight = synapse.getPSC();
     });
   }
+
+  getNeuronIds(): string[] {
+    return Array.from(this.neurons.keys());
+  }
 }

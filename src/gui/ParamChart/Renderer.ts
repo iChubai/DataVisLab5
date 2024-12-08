@@ -6,7 +6,7 @@ import { CanvasEventAnalyst } from "../Canvas/Event/Analyst";
 import { CanvasEventManager } from "../Canvas/Event/Manager";
 import { GraphEventManager } from "../../core/Graph/EventManager";
 
-export class ChartRender {
+export class ParamChartRender {
   // 数据存储和曲线更新
   private data: [number, number][];
   private xScale: d3.ScaleLinear<number, number>;
@@ -97,13 +97,13 @@ export class ChartRender {
     });
   }
 
-  select(itemId: string): ChartRender {
+  select(itemId: string): ParamChartRender {
     this.itemId = itemId;
     this.startTime = 0;
     return this;
   }
 
-  setYParam(param: string): ChartRender {
+  setYParam(param: string): ParamChartRender {
     this.paramId = param;
     this.startTime = 0;
     return this;
