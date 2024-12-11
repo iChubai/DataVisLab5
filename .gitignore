@@ -3,3 +3,4 @@ node_modules/
 wasted/
 .vscode/
 .mypy_cache/
+.*
