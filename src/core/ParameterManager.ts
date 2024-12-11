@@ -1,6 +1,5 @@
 import { NodeBasicParamRegistry, EdgeBasicParamRegistry } from "./Graph";
 import { NodePhysicParamRegistry } from "../logic/Force/Simulator";
-import { NodeSNNParameterRegistry, EdgeSNNParameterRegistry } from "../logic/SNN/ParameterRegister";
 import { GraphEventManager } from "./Graph/EventManager";
 import { GUIController } from "../gui/controller";
 
@@ -156,7 +155,6 @@ export class NodeParameterRegistry {
 
   private nodeBasicParamRegistry: NodeBasicParamRegistry; // 节点基础参数注册器
   private nodePhysicParamRegistry: NodePhysicParamRegistry; // 节点物理参数注册器
-  private nodeSNNParamRegistry: NodeSNNParameterRegistry; // 节点SNN参数注册器
   // TODO
 
   constructor(parameterManager: ParameterManager) {
@@ -164,25 +162,12 @@ export class NodeParameterRegistry {
 
     this.nodeBasicParamRegistry = new NodeBasicParamRegistry(parameterManager);
     this.nodePhysicParamRegistry = new NodePhysicParamRegistry(parameterManager);
-    this.nodeSNNParamRegistry = new NodeSNNParameterRegistry(parameterManager, "LIF");
     // TODO
   }
 
   registerAll() {
     this.nodeBasicParamRegistry.register("info");
     this.nodePhysicParamRegistry.register("x", "y", "vx", "vy", "radius");
-    this.nodeSNNParamRegistry.register(
-      "isInput",
-      "isSpiking",
-
-      "potential",
-      "lastSpikeTime",
-      "v_rest",
-      "v_th",
-      "tau_m",
-      "R",
-      "t_ref"
-    );
     // TODO
 
     console.log("NodeParameterRegistry: All parameters registered.", this.parameterManager);
@@ -193,33 +178,17 @@ export class EdgeParameterRegistry {
   private parameterManager: ParameterManager;
 
   private edgeBasicParamRegistry: EdgeBasicParamRegistry; // 边基础参数注册器
-  private edgeSNNParamRegistry: EdgeSNNParameterRegistry; // 边SNN参数注册器
   // TODO
 
   constructor(parameterManager: ParameterManager) {
     this.parameterManager = parameterManager;
 
     this.edgeBasicParamRegistry = new EdgeBasicParamRegistry(parameterManager);
-    this.edgeSNNParamRegistry = new EdgeSNNParameterRegistry(parameterManager, "Exp");
     // TODO
   }
 
   registerAll() {
     this.edgeBasicParamRegistry.register("info");
-    this.edgeSNNParamRegistry.register(
-      // Hebbian & STDP
-      "weight",
-      "learningRate",
-      "tau_pre",
-      "tau_post",
-      "A_pre",
-      "A_post",
-
-      // Exponential
-      "psc",
-      "tau",
-      "weight"
-    );
     // TODO
 
     console.log("EdgeParameterRegistry: All parameters registered.", this.parameterManager);

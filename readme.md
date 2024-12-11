@@ -58,3 +58,5 @@ A: 先定位是哪个参数报错了，然后去查找该参数的注册类。�
   - onEdgeClicked
   - ononCanvasClicked
 - ./src/snn/snn_model.ts: SNNModel (SNNModelCallback)
+
+使用`npx vite`运行项目测试。

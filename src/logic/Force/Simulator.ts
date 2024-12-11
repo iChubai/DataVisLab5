@@ -1,8 +1,6 @@
 import * as d3 from "d3";
 import { Graph, Node, Edge } from "../../core/Graph";
-import { GUIController } from "../../gui/controller";
 import { ParameterManager } from "../../core/ParameterManager";
-import { SNNEventManager } from "../SNN/Event/Manager";
 import { GraphEventManager } from "../../core/Graph/EventManager";
 import { CanvasEventManager } from "../../gui/Canvas/Event/Manager";
 
@@ -204,7 +202,7 @@ export class ForceSimulator {
   /**
    * 向其他模块注册回调函数。
    */
-  registerCallbacks(graphEventManager: GraphEventManager, snnEventManager: SNNEventManager): void {
+  registerCallbacks(graphEventManager: GraphEventManager): void {
     graphEventManager.on("NodeAdded", (nodeId: string) => {
       this.simulation.nodes(this.graph.getNodes());
       this.simulation.alpha(1).restart();
@@ -233,13 +231,6 @@ export class ForceSimulator {
       }));
       (this.simulation.force("link") as d3.ForceLink<Node, Edge>).links(links);
       this.simulation.alpha(1).restart();
-    });
-
-    snnEventManager.on("Spike", (nodeId) => {
-      d3.select(`#node-${nodeId}`).attr("fill", "gold");
-      setTimeout(() => {
-        d3.select(`#node-${nodeId}`).attr("fill", "steelblue");
-      }, 100);
     });
   }
 

@@ -11,13 +11,9 @@ import {
   NodeParameterRegistry,
   ParameterManager,
 } from "../core/ParameterManager";
-import { SNNModel } from "../logic/SNN/Model";
-import { SNNSimulator } from "../logic/SNN/Simulator";
 import { ParamChartRender } from "./ParamChart/Renderer";
-import { SNNEventManager } from "../logic/SNN/Event/Manager";
 import { PanelEventManager } from "./Panel/Event/Manager";
 import { HeatmapRender } from "./Heatmap/Renderer";
-import { SpikeChartRenderer } from "./SpikeChart/Renderer";
 
 /**
  * 控制图形的主要类，负责图形的管理、力学仿真和事件处理。
@@ -29,20 +25,16 @@ export class GUIController {
 
   private params: ParameterManager;
   private graph: Graph;
-  private snn: SNNModel;
 
   private canvasEventManager: CanvasEventManager; // 鼠标事件管理器
   private canvasEventAnalyst: CanvasEventAnalyst; // 鼠标事件管理器。虽然这里提示这个东西没用过但是这个用来监听鼠标事件的
   private graphEventManager: GraphEventManager; // 图形事件管理器
   private panelEventManager: PanelEventManager;
-  private snnEventManager: SNNEventManager;
 
   private panelRender: PanelRender; // 参数可视化绘制器
   private paramChartRender: ParamChartRender;
   private heatmapRender: HeatmapRender;
-  private spikeChartRender: SpikeChartRenderer;
   private forceSimulation: ForceSimulator; // 力学仿真器
-  private snnSimulator: SNNSimulator;
 
   // private panel: SVGSVGElement;
 
@@ -74,12 +66,10 @@ export class GUIController {
     this.panelRender = new PanelRender(this.params);
     this.paramChartRender = new ParamChartRender(this.params, this.chart);
     this.heatmapRender = new HeatmapRender(this.params, this.heatmap);
-    this.spikeChartRender = new SpikeChartRenderer(this.params, spikeChart);
 
     this.graphEventManager = new GraphEventManager();
     this.canvasEventManager = new CanvasEventManager(this.canvas);
     this.panelEventManager = new PanelEventManager(this.panelRender);
-    this.snnEventManager = new SNNEventManager();
 
     this.graph = new Graph(this.graphEventManager, canvas);
     this.forceSimulation = new ForceSimulator(
@@ -89,14 +79,6 @@ export class GUIController {
       this.canvasEventManager
     );
     this.forceSimulation.applyDragBehavior(d3.select(this.canvas).selectAll("circle"));
-    this.snn = new SNNModel(this.graph, this.params, this.snnEventManager, "LIF", "Exp");
-    this.snnSimulator = new SNNSimulator(
-      this.snn,
-      this.paramChartRender,
-      this.heatmapRender,
-      this.spikeChartRender
-    );
-    this.snnSimulator.run();
     this.canvasEventAnalyst = new CanvasEventAnalyst(
       this.canvasEventManager,
       this.graph,
@@ -106,11 +88,9 @@ export class GUIController {
     this.panelRender.registerCallbacks(this.canvasEventManager, this.panelEventManager);
     this.paramChartRender.registerCallbacks(this.canvasEventManager, this.graphEventManager);
     this.heatmapRender.registerCallbacks(this.graphEventManager);
-    this.spikeChartRender.registerCallbacks(this.graphEventManager);
     this.params.registerCallbacks(this.graphEventManager);
     this.graph.registerCallbacks(this.canvasEventManager);
-    this.forceSimulation.registerCallbacks(this.graphEventManager, this.snnEventManager);
-    this.snn.registerCallbacks(this.graphEventManager);
+    this.forceSimulation.registerCallbacks(this.graphEventManager);
   }
 
   graphEvent(): GraphEventManager {
@@ -121,8 +101,5 @@ export class GUIController {
   }
   panelEvent(): PanelEventManager {
     return this.panelEventManager;
-  }
-  snnEvent(): SNNEventManager {
-    return this.snnEventManager;
   }
 }

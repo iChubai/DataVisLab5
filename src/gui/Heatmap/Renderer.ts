@@ -1,7 +1,6 @@
 import * as d3 from "d3";
 import { ParameterManager } from "../../core/ParameterManager";
 import { GraphEventManager } from "../../core/Graph/EventManager";
-import { H } from "vite/dist/node/types.d-aGj9QkWt";
 
 // 设计一个 Heatmap 类
 export class HeatmapRender {
