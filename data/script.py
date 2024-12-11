@@ -7,8 +7,11 @@ nodes_df = pd.read_csv("nodes.csv")
 # 提取PASSNGR字段不为NaN的行
 nodes_data_df = nodes_df.dropna(subset=["PASSNGR"])
 
-# 保存为新的CSV文件
-nodes_data_df.to_csv("nodes_data.csv", index=False)
+# # 保存为新的CSV文件
+# nodes_data_df.to_csv("nodes_data.csv", index=False)
+
+# 保存为JSON文件
+nodes_data_df.to_json("nodes_data.json", orient="records")
 
 # %%
 import math
@@ -62,5 +65,8 @@ for idx1, row1 in nodes_data_df.iterrows():
 # 将边保存为DataFrame
 edges_df = pd.DataFrame(edges, columns=["SourceNode", "TargetNode", "Distance"])
 
-# 打印或保存边信息
-edges_df.to_csv("edges.csv", index=False)
+# # 打印或保存边信息
+# edges_df.to_csv("edges_data.csv", index=False)
+
+# 保存为JSON文件
+edges_df.to_json("edges_data.json", orient="records")
