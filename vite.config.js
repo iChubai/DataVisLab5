@@ -5,6 +5,11 @@ export default defineConfig({
   build: {
     outDir: "../dist", // 设置输出目录
   },
+  resolve: {
+    alias: {
+      "@data": "/data", // 设置别名
+    },
+  },
   server: {
     open: true, // 自动在浏览器中打开
   },

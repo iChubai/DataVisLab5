@@ -62,7 +62,7 @@
           .on("click", clicked) // 点击州时触发缩放
           .attr("d", path)
           .attr("fill", "rgba(0, 0, 0, 0.2)") // 设置州的默认填充色为半透明红色
-          .each(function (d) {
+          .each((d) => {
             d.clicked = false; // 给每个州添加一个 'clicked' 属性，初始值为 false
           });
 

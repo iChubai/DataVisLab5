@@ -3,43 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Graph Interaction Test</title>
-
+    <title>美国地图</title>
     <style>
-      /* 样式定义 */
-
-      /* 为 SVG 元素添加边框 */
       svg {
-        border: 1px solid #ccc;
-      }
-
-      /* 定义节点样式 */
-      .node {
-        fill: steelblue; /* 填充颜色 */
-        cursor: pointer; /* 鼠标悬停时显示为手形指针 */
-      }
-
-      /* 定义边样式 */
-      .edge {
-        stroke: black; /* 边的颜色 */
-        stroke-width: 2px; /* 边的宽度 */
+        width: 100%;
+        height: auto;
       }
     </style>
   </head>
   <body>
-    <h1>Graph Interaction Test</h1>
-    <!-- 必须具有 id="graphCanvas" 的 SVG 元素，用于绘制图形 -->
-    <svg id="graphCanvas" width="1000" height="1000"></svg>
-    <div id="parameterPanel" style="display: none; border: 1px solid #ccc; padding: 10px">
-      <h3>Item ( Node | Edge ) Parameters</h3>
-      <form id="parameterForm"></form>
-    </div>
-    <svg id="chart" width="600" height="500">
-      <g transform="translate(50, 50)" id="chart-container"></g>
-    </svg>
-    <svg id="heatmap-container" width="1200" height="1000"></svg>
-    <svg id="spike-chart-svg" width="600" height="500"></svg>
+    <h1>美国地图</h1>
+    <svg viewBox="0 0 975 610"></svg>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.0.0/dist/topojson-client.min.js"></script>
+
+    <script src="./MapRenderer.ts" , type="module"></script>
   </body>
-  <!-- 引入主模块脚本 -->
-  <script src="./main.ts" type="module"></script>
 </html>
