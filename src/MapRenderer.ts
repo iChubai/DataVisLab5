@@ -18,7 +18,7 @@ export class MapRenderer {
       .attr("width", this.width)
       .attr("height", this.height)
       .attr("style", "max-width: 100%; height: auto;")
-      .on("click", this.reset); // 点击时重置视图
+      .on("click", () => this.reset()); // 点击时重置视图
 
     this.g = this.svg.append("g");
 
@@ -31,12 +31,13 @@ export class MapRenderer {
     this.projection = d3
       .geoAlbersUsa()
       .translate([this.width / 2, this.height / 2]) // 将地图投影的中心放到SVG的中心
-      .scale(this.width);
+      .scale(this.width * 1.325);
   }
 
   // 重置视图
-  private reset(states: d3.Selection<any, any, any, any>): void {
+  private reset(): void {
     console.log("reset");
+    const states = this.g.selectAll(".state");
     states.transition().style("fill", "rgba(0, 0, 0, 0.2)"); // 清除点击时的填充色
     this.svg
       .transition()
@@ -54,14 +55,10 @@ export class MapRenderer {
   }
 
   // 点击州时的缩放
-  private clicked(
-    event: MouseEvent,
-    d: any,
-    states: d3.Selection<any, any, any, any>,
-    path: d3.GeoPath<any>
-  ): void {
+  private clicked(event: MouseEvent, d: any, path: d3.GeoPath<any>): void {
+    const states = this.g.selectAll(".state");
     console.log("clicked");
-    if (d.clicked) return this.reset(states); // 若当前州已被点击，则重置视图
+    if (d.clicked) return this.reset(); // 若当前州已被点击，则重置视图
     states.each(function (d: any) {
       d.clicked = false; // 清除其他州的点击状态
     });
@@ -120,9 +117,10 @@ export class MapRenderer {
         .selectAll<SVGPathElement, any>("path")
         .data((topojson.feature(us, us.objects.states) as any).features)
         .join("path")
-        .on("click", (event: MouseEvent, d: any) => this.clicked(event, d, states, path)) // 点击州时触发缩放
+        .on("click", (event: MouseEvent, d: any) => this.clicked(event, d, path)) // 点击州时触发缩放
         .attr("d", path as any)
         .attr("fill", "rgba(0, 0, 0, 0.2)") // 设置州的默认填充色为半透明红色
+        .attr("class", "state")
         .each((d: any) => {
           d.clicked = false; // 给每个州添加一个 'clicked' 属性，初始值为 false
         });
