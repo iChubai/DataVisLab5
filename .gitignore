@@ -4,3 +4,4 @@ wasted/
 .vscode/
 .mypy_cache/
 .*
+*.geojson

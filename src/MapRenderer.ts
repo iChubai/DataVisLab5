@@ -31,7 +31,7 @@ export class MapRenderer {
     this.projection = d3
       .geoAlbersUsa()
       .translate([this.width / 2, this.height / 2]) // 将地图投影的中心放到SVG的中心
-      .scale(this.width * 1.325);
+      .scale((this.width * 4) / 3);
   }
 
   // 重置视图
@@ -91,6 +91,12 @@ export class MapRenderer {
     const { transform } = event;
     this.g.attr("transform", transform.toString()); // 调整坐标系
     this.g.attr("stroke-width", 1 / transform.k); // 调整边界线的粗细
+
+    // 调整节点大小，使其始终保持相同的视觉大小
+    this.g
+      .selectAll("circle")
+      .attr("r", 5 / transform.k)
+      .attr("stroke-width", 1 / transform.k); // 这里的 5 是节点的默认半径
   }
 
   public render(): void {
@@ -136,8 +142,25 @@ export class MapRenderer {
         .attr("d", path(topojson.mesh(us, us.objects.states, (a: any, b: any) => a !== b)));
     });
 
+    // d3.json("./edges_data.geojson").then((edgesData) => {
+    //   // 将 GeoJSON 数据绘制到地图上
+    //   this.g
+    //     .append("g")
+    //     .selectAll("path")
+    //     .data((edgesData as FeatureCollection).features)
+    //     .join("path")
+    //     .attr("d", (d: any) => {
+    //       // 对GeoJSON线坐标应用投影，转换成SVG坐标
+    //       const path = d3.geoPath().projection(this.projection);
+    //       return path(d.geometry as Geometry);
+    //     })
+    //     .attr("fill", "none") // 设置线的填充色
+    //     .attr("stroke", "gray") // 设置线的颜色
+    //     .attr("stroke-width", 1); // 设置线的宽度
+    // });
+
     // 加载 GeoJSON 数据并绘制节点
-    d3.json("./nodes_data.geojson").then((nodesData) => {
+    d3.json("./nodes.geojson").then((nodesData) => {
       // 将 GeoJSON 数据绘制到地图上
       this.g
         .append("g")
@@ -155,7 +178,19 @@ export class MapRenderer {
           return y;
         })
         .attr("r", 5) // 设置节点大小
-        .attr("fill", "red") // 设置节点颜色
+        .attr("fill", (d: any) => {
+          // 根据 PASSNGR 类型设置节点颜色
+          switch (d.properties.PASSNGR) {
+            case "A":
+              return "red"; // A类型节点为红色
+            case "B":
+              return "blue"; // B类型节点为蓝色
+            case "C":
+              return "green"; // C类型节点为绿色
+            default:
+              return "gray"; // 默认节点颜色为灰色
+          }
+        })
         .attr("stroke", "black") // 设置节点边框颜色
         .attr("stroke-width", 1);
     });
