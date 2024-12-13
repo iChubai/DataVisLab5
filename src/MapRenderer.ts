@@ -1,6 +1,5 @@
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
-import { FeatureCollection, Geometry } from "geojson";
 
 export class MapRenderer {
   private width: number = 975;
@@ -159,41 +158,41 @@ export class MapRenderer {
     //     .attr("stroke-width", 1); // 设置线的宽度
     // });
 
-    // 加载 GeoJSON 数据并绘制节点
-    d3.json("./nodes.geojson").then((nodesData) => {
-      // 将 GeoJSON 数据绘制到地图上
-      this.g
-        .append("g")
-        .selectAll("circle")
-        .data((nodesData as FeatureCollection).features)
-        .join("circle")
-        .attr("cx", (d: any) => {
-          // 对GeoJSON点坐标应用投影，转换成SVG坐标
-          const [x, y] = this.projection(d.geometry.coordinates)!;
-          return x;
-        })
-        .attr("cy", (d: any) => {
-          // 对GeoJSON点坐标应用投影，转换成SVG坐标
-          const [x, y] = this.projection(d.geometry.coordinates)!;
-          return y;
-        })
-        .attr("r", 5) // 设置节点大小
-        .attr("fill", (d: any) => {
-          // 根据 PASSNGR 类型设置节点颜色
-          switch (d.properties.PASSNGR) {
-            case "A":
-              return "red"; // A类型节点为红色
-            case "B":
-              return "blue"; // B类型节点为蓝色
-            case "C":
-              return "green"; // C类型节点为绿色
-            default:
-              return "gray"; // 默认节点颜色为灰色
-          }
-        })
-        .attr("stroke", "black") // 设置节点边框颜色
-        .attr("stroke-width", 1);
-    });
+    // // 加载 GeoJSON 数据并绘制节点
+    // d3.json("./nodes.geojson").then((nodesData) => {
+    //   // 将 GeoJSON 数据绘制到地图上
+    //   this.g
+    //     .append("g")
+    //     .selectAll("circle")
+    //     .data((nodesData as FeatureCollection).features)
+    //     .join("circle")
+    //     .attr("cx", (d: any) => {
+    //       // 对GeoJSON点坐标应用投影，转换成SVG坐标
+    //       const [x, y] = this.projection(d.geometry.coordinates)!;
+    //       return x;
+    //     })
+    //     .attr("cy", (d: any) => {
+    //       // 对GeoJSON点坐标应用投影，转换成SVG坐标
+    //       const [x, y] = this.projection(d.geometry.coordinates)!;
+    //       return y;
+    //     })
+    //     .attr("r", 5) // 设置节点大小
+    //     .attr("fill", (d: any) => {
+    //       // 根据 PASSNGR 类型设置节点颜色
+    //       switch (d.properties.PASSNGR) {
+    //         case "A":
+    //           return "red"; // A类型节点为红色
+    //         case "B":
+    //           return "blue"; // B类型节点为蓝色
+    //         case "C":
+    //           return "green"; // C类型节点为绿色
+    //         default:
+    //           return "gray"; // 默认节点颜色为灰色
+    //       }
+    //     })
+    //     .attr("stroke", "black") // 设置节点边框颜色
+    //     .attr("stroke-width", 1);
+    // });
 
     // 初始化缩放
     this.svg.call(this.zoom as any);

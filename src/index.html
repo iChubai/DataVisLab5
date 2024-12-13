@@ -3,21 +3,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>美国地图</title>
     <style>
       svg {
         width: 100%;
         height: auto;
       }
     </style>
+    <link rel="stylesheet" href="./left_side_panel.css" />
   </head>
   <body>
-    <h1>美国地图</h1>
     <svg viewBox="0 0 975 610"></svg>
+
+    <!-- 侧边栏容器 -->
+    <div class="dockPanelParent">
+      <!-- 顶部工具栏 -->
+      <div class="toolbar">
+        <button class="tabButton" id="btn-intro">介绍</button>
+        <button class="tabButton" id="btn-params">参数</button>
+      </div>
+    </div>
+
+    <!-- 第二层侧边栏 -->
+    <div id="sidePanel" class="sidePanel hidden">
+      <h2 id="sidePanelTitle">介绍</h2>
+      <div class="content" id="sidePanelContent">
+        <p>这是介绍内容。</p>
+      </div>
+      <!-- 拖拽控件的父容器 -->
+      <div class="draggerParentHorizontal" id="draggerParent">
+        <div class="splitPaneDragger" id="splitPaneDragger"></div>
+      </div>
+    </div>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.0.0/dist/topojson-client.min.js"></script>
 
     <script src="./MapRenderer.ts" , type="module"></script>
+    <script src="./SidePanel.ts"></script>
   </body>
 </html>
