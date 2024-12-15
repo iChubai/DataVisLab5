@@ -1,0 +1,93 @@
+/* 整体布局 */
+body {
+  display: flex;
+  justify-content: flex-end;
+  height: 100vh;
+  margin: 0;
+  background-color: #f4f4f4;
+}
+
+/* 侧边栏按钮容器 */
+.button-container {
+  display: flex;
+  flex-direction: column; /* 按钮垂直排列 */
+  justify-content: flex-start;
+  align-items: flex-end;
+  top: 0; /* 让按钮稍微距离顶部 */
+  right: 0;
+  gap: 10px;
+  background-color: #3a3a3a;
+}
+
+/* 侧边栏按钮样式 */
+.sidebar-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin: 10px;
+  cursor: pointer;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* 侧边栏展开后的内容样式 */
+.sidebar {
+  position: absolute;
+  right: 70px; /* 让侧边栏显示在按钮左边 */
+  width: 200px;
+  background-color: white;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+  border: 1px solid #ddd;
+  display: none; /* 默认隐藏 */
+  top: 50px;
+  z-index: 10;
+  /* 圆角 */
+  border-radius: 10px;
+  /* 透明度 */
+  opacity: 0.2;
+}
+
+/* 图像和表格内容 */
+.sidebar-content {
+  padding: 10px;
+  height: 100%;
+  overflow-y: auto;
+  opacity: 1;
+}
+
+/* 拖拽按钮 */
+.dragger {
+  width: 40px;
+  height: 10px;
+  background-color: #aaa;
+  cursor: ns-resize;
+  margin: 5px auto;
+  border-radius: 5px;
+}
+
+/* 侧边栏容器 */
+.sidebars-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.sidebar-group-1 {
+  background-color: #2196f3;
+}
+
+.sidebar-group-2 {
+  background-color: #ff9800;
+}
+
+.sidebar-group-3 {
+  background-color: #4caf50;
+}
+
+.sidebar-group-4 {
+  background-color: #9c27b0;
+}

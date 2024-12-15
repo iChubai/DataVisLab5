@@ -92,5 +92,85 @@ class LeftSidePanel {
   }
 }
 
-const leftSidePanel = new LeftSidePanel();
-leftSidePanel.init();
+class RightSidePanel {
+  private sidebar_ids = [
+    { button_id: "sidebarButton1", sidebar_id: "sidebar1", dragger_id: "dragger1" },
+    { button_id: "sidebarButton2", sidebar_id: "sidebar2", dragger_id: "dragger2" },
+    { button_id: "sidebarButton3", sidebar_id: "sidebar3", dragger_id: "dragger3" },
+    { button_id: "sidebarButton4", sidebar_id: "sidebar4", dragger_id: "dragger4" },
+  ];
+  private buttons: { button: HTMLElement; sidebar: HTMLElement }[];
+
+  constructor() {
+    this.buttons = [];
+    this.sidebar_ids.forEach(({ button_id, sidebar_id, dragger_id }) => {
+      const button =
+        document.getElementById(button_id) ??
+        (() => {
+          throw new Error(`按钮${button_id}不存在`);
+        }).call(this);
+      const sidebar =
+        document.getElementById(sidebar_id) ??
+        (() => {
+          throw new Error(`侧边栏${sidebar_id}不存在`);
+        }).call(this);
+      this.buttons.push({ button, sidebar });
+    });
+
+    this.buttons.forEach(({ button, sidebar }) => {
+      button.addEventListener("click", () => {
+        console.log(sidebar.style.display);
+        sidebar.style.display = sidebar.style.display === "block" ? "none" : "block";
+      });
+    });
+  }
+
+  private addDraggable(draggerId: string, sidebarId: string) {
+    const dragger =
+      document.getElementById(draggerId) ??
+      (() => {
+        throw new Error(`拖拽元素${draggerId}不存在`);
+      }).call(null);
+    const sidebar =
+      document.getElementById(sidebarId) ??
+      (() => {
+        throw new Error(`侧边栏${sidebarId}不存在`);
+      }).call(null);
+
+    let isDragging = false;
+    let startY: number;
+    let startTop: number;
+
+    dragger.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      startY = e.clientY;
+      startTop = parseInt(window.getComputedStyle(sidebar).top, 10);
+      e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      const deltaY = e.clientY - startY;
+      const newTop = startTop + deltaY;
+      sidebar.style.top = `${newTop}px`;
+    });
+
+    document.addEventListener("mouseup", () => {
+      isDragging = false;
+    });
+  }
+
+  public init() {
+    // 为每个侧边栏添加拖拽事件
+    this.sidebar_ids.forEach(({ button_id, sidebar_id, dragger_id }) => {
+      this.addDraggable(dragger_id, sidebar_id);
+    });
+  }
+}
+
+window.onload = () => {
+  const leftSidePanel = new LeftSidePanel();
+  leftSidePanel.init();
+  const rightSidePanel = new RightSidePanel();
+  rightSidePanel.init();
+};
