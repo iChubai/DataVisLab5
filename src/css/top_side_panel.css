@@ -1,0 +1,15 @@
+/* 顶部工具栏 */
+.top-toolbar {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  /* 居中 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* 元素间隔 */
+  gap: 50px;
+}

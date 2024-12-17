@@ -49,6 +49,9 @@ class LeftSidePanel {
           if (button.id === "btn-intro") {
             this.sidePanelTitle.innerText = "介绍";
             this.sidePanelContent.innerHTML = "<p>这是介绍内容。</p>";
+          } else if (button.id === "btn-filter") {
+            this.sidePanelTitle.innerText = "过滤器";
+            this.sidePanelContent.innerHTML = "<p>这是过滤器内容。</p>";
           } else if (button.id === "btn-params") {
             this.sidePanelTitle.innerText = "参数";
             this.sidePanelContent.innerHTML = "<p>这是参数内容。</p>";
@@ -168,9 +171,47 @@ class RightSidePanel {
   }
 }
 
+class TopSidePanel {
+  private buttons_ids = ["btn-map-view", "btn-distance-view", "btn-time-view"];
+
+  private buttons: Map<string, HTMLElement>;
+
+  constructor() {
+    this.buttons = new Map();
+    this.buttons_ids.forEach((button_id) => {
+      const button =
+        document.getElementById(button_id) ??
+        (() => {
+          throw new Error(`按钮${button_id}不存在`);
+        }).call(this);
+      this.buttons.set(button_id, button);
+    });
+  }
+
+  public init() {
+    this.buttons.forEach((button, button_id) => {
+      if (button_id === "btn-map-view") {
+        button.addEventListener("click", () => {
+          console.log("地图视图");
+        });
+      } else if (button_id === "btn-distance-view") {
+        button.addEventListener("click", () => {
+          console.log("距离视图");
+        });
+      } else if (button_id === "btn-time-view") {
+        button.addEventListener("click", () => {
+          console.log("时间视图");
+        });
+      }
+    });
+  }
+}
+
 window.onload = () => {
   const leftSidePanel = new LeftSidePanel();
   leftSidePanel.init();
   const rightSidePanel = new RightSidePanel();
   rightSidePanel.init();
+  const topSidePanel = new TopSidePanel();
+  topSidePanel.init();
 };

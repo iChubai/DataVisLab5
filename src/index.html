@@ -11,6 +11,7 @@
     </style>
     <link rel="stylesheet" href="./css/left_side_panel.css" />
     <link rel="stylesheet" href="./css/right_side_panel.css" />
+    <link rel="stylesheet" href="./css/top_side_panel.css" />
   </head>
   <body>
     <!-- 地图容器 -->
@@ -18,9 +19,9 @@
 
     <!-- 左侧工具栏 -->
     <div class="dockPanelParent">
-      <!-- 顶部工具栏 -->
-      <div class="toolbar">
+      <div class="left-toolbar">
         <button class="tabButton" id="btn-intro">介绍</button>
+        <button class="tabButton" id="btn-filter">过滤器</button>
         <button class="tabButton" id="btn-params">参数</button>
       </div>
     </div>
@@ -37,11 +38,12 @@
       </div>
     </div>
 
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.0.0/dist/topojson-client.min.js"></script>
-
-    <script src="./MapRenderer.ts" , type="module"></script>
-    <script src="./SidePanel.ts"></script>
+    <!-- 顶部工具栏 -->
+    <div class="top-toolbar">
+      <button class="top-button" id="btn-map-view">地图视图</button>
+      <button class="top-button" id="btn-distance-view">距离拓扑</button>
+      <button class="top-button" id="btn-time-view">时间拓扑</button>
+    </div>
 
     <!-- 右侧工具栏 -->
          <!-- 按钮容器 -->
@@ -115,5 +117,12 @@
           </table>
         </div>
       </div>
+
+
+      <script src="https://d3js.org/d3.v7.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.0.0/dist/topojson-client.min.js"></script>
+  
+      <script src="./MapRenderer.ts" type="module"></script>
+      <script src="./SidePanel.ts"></script>
   </body>
 </html>

@@ -19,7 +19,7 @@
 }
 
 /* 顶部工具栏 */
-.toolbar {
+.left-toolbar {
   position: absolute;
   top: 0;
   width: 100%;

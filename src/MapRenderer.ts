@@ -8,6 +8,12 @@ export class MapRenderer {
 
   private svg: d3.Selection<any, any, any, any>;
   private g: d3.Selection<any, any, any, any>;
+  private gMap: d3.Selection<any, any, any, any>;
+  private gMapProvinces: d3.Selection<any, any, any, any>;
+  private gMapCounties: d3.Selection<any, any, any, any>;
+  private gNodes: d3.Selection<any, any, any, any>;
+  private gLines: d3.Selection<any, any, any, any>;
+
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   private projection: d3.GeoProjection;
 
@@ -21,24 +27,29 @@ export class MapRenderer {
       .on("click", () => this.reset()); // 点击时重置视图
 
     this.g = this.svg.append("g");
+    this.gMap = this.g.append("g");
+    this.gMapProvinces = this.gMap.append("g");
+    this.gMapCounties = this.gMap.append("g");
+    this.gLines = this.g.append("g");
+    this.gNodes = this.g.append("g");
 
     this.zoom = d3
       .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([1, 8]) // 设置缩放比例范围
+      .scaleExtent([0.01, 8]) // 设置缩放比例范围
       .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => this.zoomed(event)); // 在缩放时调用 zoomed 函数
 
-    // 定义地理投影，用于地图的绘制
+    // 设置投影参数
     this.projection = d3
-      .geoAlbersUsa()
-      .translate([this.width / 2, this.height / 2]) // 将地图投影的中心放到SVG的中心
-      .scale((this.width * 4) / 3);
+      .geoMercator()
+      .center([100, 38]) // 设置地图的中心（可以根据数据调整）
+      .scale(800) // 缩放级别（根据数据调整）
+      .translate([this.width / 2, this.height / 2]); // 平移到屏幕中心
   }
-
   // 重置视图
   private reset(): void {
     console.log("reset");
-    const states = this.g.selectAll(".state");
-    states.transition().style("fill", "rgba(0, 0, 0, 0.2)"); // 清除点击时的填充色
+    const provinces = this.gMap.selectAll(".province");
+    provinces.transition().style("fill", "rgba(0, 0, 0, 0.2)"); // 清除点击时的填充色
     this.svg
       .transition()
       .duration(750)
@@ -49,24 +60,24 @@ export class MapRenderer {
       );
 
     // 重置点击状态
-    states.each((d: any) => {
+    provinces.each((d: any) => {
       d.clicked = false;
     });
   }
 
   // 点击州时的缩放
   private clicked(event: MouseEvent, d: any, path: d3.GeoPath<any>): void {
-    const states = this.g.selectAll(".state");
+    const provinces = this.gMap.selectAll(".province");
     console.log("clicked");
     if (d.clicked) return this.reset(); // 若当前州已被点击，则重置视图
-    states.each(function (d: any) {
+    provinces.each(function (d: any) {
       d.clicked = false; // 清除其他州的点击状态
     });
     d.clicked = true;
 
     const [[x0, y0], [x1, y1]] = path.bounds(d);
     event.stopPropagation(); // 阻止事件传播
-    states.transition().style("fill", "rgba(0, 0, 0, 0.8)"); // 清除其他州的填充色
+    provinces.transition().style("fill", "rgba(0, 0, 0, 0.8)"); // 清除其他州的填充色
     if (event.currentTarget) {
       d3.select(event.currentTarget as HTMLElement)
         .transition()
@@ -89,57 +100,81 @@ export class MapRenderer {
   private zoomed(event: d3.D3ZoomEvent<SVGSVGElement, unknown>): void {
     console.log("zoomed");
     const { transform } = event;
-    this.g.attr("transform", transform.toString()); // 调整坐标系
-    this.g.attr("stroke-width", 1 / transform.k); // 调整边界线的粗细
+
+    // 应用缩放变换
+    this.g.attr("transform", transform.toString());
+
+    // 调整边界线的粗细
+    this.gMap.attr("stroke-width", 1 / transform.k);
 
     // 调整节点大小，使其始终保持相同的视觉大小
-    this.g
+    this.gNodes
       .selectAll("circle")
       .attr("r", 5 / transform.k)
       .attr("stroke-width", 1 / transform.k); // 这里的 5 是节点的默认半径
+
+    // 调整线的粗细
+    this.gLines.attr("stroke-width", 1 / transform.k);
   }
 
-  public render(): void {
-    d3.json("./counties-albers-10m.json").then((us: any) => {
-      const path = d3.geoPath();
+  public renderMap(): void {
+    for (let i = 11; i <= 90; i++) {
+      d3.json("./data/geometryProvince/" + i + ".json")
+        .then((geoData: any) => {
+          const path = d3.geoPath().projection(this.projection);
 
-      // 绘制县界
-      this.g
+          const counties = this.gMapCounties
+            .append("g")
+            .attr("fill", "none")
+            .attr("stroke", "#444")
+            .attr("cursor", "pointer")
+            .selectAll<SVGPathElement, any>("path")
+            .data(
+              geoData.features.filter(
+                (d: any) => d.properties.name !== "昆玉市" && d.properties.name !== "静安区"
+              )
+            )
+            .join("path")
+            .attr("d", path as any)
+            .attr("fill", "rgba(0, 0, 0, 0.2)")
+            .attr("class", "state");
+
+          counties.append("title").text((d: any) => d.properties.name);
+        })
+        .catch((error: any) => {});
+    }
+
+    d3.json("./data/geometryProvince/china.json").then((chinaGeoData: any) => {
+      const path = d3.geoPath().projection(this.projection);
+
+      this.gMapProvinces
         .append("g")
         .attr("fill", "none")
         .attr("stroke", "#aaa")
         .attr("stroke-width", 0.5)
         .selectAll("path")
-        .data((topojson.feature(us, us.objects.counties) as any).features)
+        .data(chinaGeoData.features)
         .join("path")
-        .attr("d", path as any);
+        .attr("d", path as any)
+        .attr("fill", "none");
 
-      // 绘制州界
-      const states = this.g
+      const provinces = this.gMap
         .append("g")
         .attr("fill", "none")
         .attr("stroke", "#444")
         .attr("cursor", "pointer")
         .selectAll<SVGPathElement, any>("path")
-        .data((topojson.feature(us, us.objects.states) as any).features)
+        .data(chinaGeoData.features)
         .join("path")
-        .on("click", (event: MouseEvent, d: any) => this.clicked(event, d, path)) // 点击州时触发缩放
+        .on("click", (event: MouseEvent, d: any) => this.clicked(event, d, path))
         .attr("d", path as any)
-        .attr("fill", "rgba(0, 0, 0, 0.2)") // 设置州的默认填充色为半透明红色
-        .attr("class", "state")
+        .attr("fill", "rgba(0, 0, 0, 0.2)")
+        .attr("class", "province")
         .each((d: any) => {
-          d.clicked = false; // 给每个州添加一个 'clicked' 属性，初始值为 false
+          d.clicked = false;
         });
 
-      states.append("title").text((d: any) => d.properties.name); // 显示州名
-
-      // 绘制州与州之间的边界
-      this.g
-        .append("path")
-        .attr("fill", "none")
-        .attr("stroke", "#555")
-        .attr("stroke-linejoin", "round")
-        .attr("d", path(topojson.mesh(us, us.objects.states, (a: any, b: any) => a !== b)));
+      provinces.append("title").text((d: any) => d.properties.name);
     });
 
     // d3.json("./edges_data.geojson").then((edgesData) => {
@@ -158,42 +193,89 @@ export class MapRenderer {
     //     .attr("stroke", "gray") // 设置线的颜色
     //     .attr("stroke-width", 1); // 设置线的宽度
     // });
+  }
 
-    // // 加载 GeoJSON 数据并绘制节点
-    // d3.json("./nodes.geojson").then((nodesData) => {
-    //   // 将 GeoJSON 数据绘制到地图上
-    //   this.g
-    //     .append("g")
-    //     .selectAll("circle")
-    //     .data((nodesData as FeatureCollection).features)
-    //     .join("circle")
-    //     .attr("cx", (d: any) => {
-    //       // 对GeoJSON点坐标应用投影，转换成SVG坐标
-    //       const [x, y] = this.projection(d.geometry.coordinates)!;
-    //       return x;
-    //     })
-    //     .attr("cy", (d: any) => {
-    //       // 对GeoJSON点坐标应用投影，转换成SVG坐标
-    //       const [x, y] = this.projection(d.geometry.coordinates)!;
-    //       return y;
-    //     })
-    //     .attr("r", 5) // 设置节点大小
-    //     .attr("fill", (d: any) => {
-    //       // 根据 PASSNGR 类型设置节点颜色
-    //       switch (d.properties.PASSNGR) {
-    //         case "A":
-    //           return "red"; // A类型节点为红色
-    //         case "B":
-    //           return "blue"; // B类型节点为蓝色
-    //         case "C":
-    //           return "green"; // C类型节点为绿色
-    //         default:
-    //           return "gray"; // 默认节点颜色为灰色
-    //       }
-    //     })
-    //     .attr("stroke", "black") // 设置节点边框颜色
-    //     .attr("stroke-width", 1);
-    // });
+  public renderNodes(): void {
+    d3.json("./data/FilteredStationGeo.json").then((positionData: any) => {
+      this.gNodes
+        .selectAll("circle")
+        .data(Object.entries(positionData))
+        .join("circle")
+        .attr("cx", (d: any) => this.projection(d[1])![0]) // x 坐标
+        .attr("cy", (d: any) => this.projection(d[1])![1]) // y 坐标
+        .attr("r", 5) // 设置圆的半径
+        .attr("fill", "red") // 设置圆的填充颜色
+        .attr("stroke", "white") // 设置圆的边框颜色
+        .attr("stroke-width", 1);
+    });
+  }
+
+  public renderLines(): void {
+    d3.json("./data/FilteredAccessInfo.json").then((stationsData: any) => {
+      const selectedStations = Object.keys(stationsData); // 获取站点的键（例如：长春、南昌等）
+
+      // 载入FilteredTrainInfo.json，并筛选相关数据
+      d3.json("./data/FilteredTrainInfo.json").then((trainData: any) => {
+        const filteredTrainData = trainData.filter((train: any) =>
+          train.stations.some((station: string) => selectedStations.includes(station))
+        );
+
+        // 载入站点地理信息
+        d3.json("./data/FilteredStationGeo.json").then((stationGeo: any) => {
+          const trainLines = filteredTrainData
+            .map((train: any) => {
+              const trainStations = train.stations
+                .map((station: string) => stationGeo[station]) // 将站点转换为地理坐标
+                .filter((geo: any) => geo != undefined);
+
+              // 确保有两个以上的坐标点才能绘制
+              return trainStations.length > 1 ? { coords: trainStations } : null;
+            })
+            .filter((line: any) => line !== null);
+
+          // 绘制线路：
+
+          // 绘制每条火车线路
+          const lineGenerator = d3
+            .line()
+            .x(
+              (d: any) =>
+                (this.projection(d) ??
+                  (() => {
+                    throw new Error("Invalid coordinate");
+                  }).call(null))[0]
+            )
+            .y(
+              (d: any) =>
+                (this.projection(d) ??
+                  (() => {
+                    throw new Error("Invalid coordinate");
+                  }).call(null))[1]
+            );
+
+          // 使用不同的颜色区分不同的线路
+          const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+
+          this.gLines
+            .selectAll(".train-line")
+            .data(trainLines)
+            .enter()
+            .append("path")
+            .attr("class", "train-line")
+            .attr("d", (d: any) => lineGenerator(d.coords))
+            .attr("stroke", (d: any, i: any) => colorScale(i)) // 线路颜色
+            .attr("stroke-width", 2)
+            .attr("fill", "none")
+            .attr("opacity", 0.7);
+        });
+      });
+    });
+  }
+
+  public render(): void {
+    this.renderMap();
+    this.renderLines();
+    this.renderNodes();
 
     // 初始化缩放
     this.svg.call(this.zoom as any);
