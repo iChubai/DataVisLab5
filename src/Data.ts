@@ -6,7 +6,7 @@ export type NodeTable = {
     name: string;
 
     access_info?: number;
-    geo_info?: [number, number];
+    geo_info?: [number, number]; // 经度，纬度 [longitude, latitude]
   };
 };
 

@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import { Context } from "../Context";
 import { GraphEventManager } from "./Basic/EventManager";
-import { Graph } from "./Basic/Graph";
+import { createDefaultEdge, Graph } from "./Basic/Graph";
 import { CanvasEventManager } from "./Renderer/EventManager";
 import { CanvasEventAnalyst } from "./Renderer/EventAnalyst";
 import { ForceSimulator } from "./Renderer/Simulator";
@@ -17,6 +17,7 @@ export class GraphContext {
   private canvasEventAnalyst: CanvasEventAnalyst;
 
   private simulator: ForceSimulator | null;
+  private model: "distance" | "time" | null;
 
   constructor(
     private ctx: Context,
@@ -29,7 +30,7 @@ export class GraphContext {
     this.graphEventManager = new GraphEventManager();
     this.canvasEventManager = new CanvasEventManager(this.svg.node());
 
-    this.graph = new Graph(this.graphEventManager, this.g.node());
+    this.graph = new Graph(this, this.graphEventManager, this.g.node());
 
     this.canvasEventAnalyst = new CanvasEventAnalyst(
       this.canvasEventManager,
@@ -38,6 +39,56 @@ export class GraphContext {
     );
 
     this.simulator = null;
+    this.model = null;
+
+    this.registerCallbacks(this.graphEventManager);
+  }
+
+  calculateDistance(sourceId: string, targetId: string): number {
+    const nodes = this.ctx.data.nodes();
+    const src_pos = nodes[sourceId]["geo_info"]!;
+    const dst_pos = nodes[targetId]["geo_info"]!;
+
+    //使用端点间的直线距离计算length。注意端点坐标是经纬度。
+    const R = 6371; // 地球半径，单位为千米
+    const φ1 = (src_pos[1] * Math.PI) / 180;
+    const φ2 = (dst_pos[1] * Math.PI) / 180;
+    const Δφ = ((dst_pos[1] - src_pos[1]) * Math.PI) / 180;
+    const Δλ = ((dst_pos[0] - src_pos[0]) * Math.PI) / 180;
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // 返回距离，单位为千米
+
+    return distance / (this.model === "distance" ? 1 : 3);
+  }
+
+  registerCallbacks(graphEventManager: GraphEventManager): void {
+    graphEventManager.on("NodeAdded", (id: string) => {
+      this.ctx.data.nodes()[id] = {
+        id: id,
+        name: `new node ${id}`,
+        geo_info: [0, 0],
+        access_info: 0,
+      };
+    });
+
+    graphEventManager.on("NodeRemoved", (id: string) => {
+      delete this.ctx.data.nodes()[id];
+    });
+
+    graphEventManager.on("EdgeAdded", (id: string) => {
+      const [sourceId, targetId] = id.split("->");
+      const distance = this.graph.getEdgeById(id)!.length * (this.model === "distance" ? 1 : 3);
+      this.ctx.data.adjacencyTable()[sourceId][targetId] = [distance, 3 * distance, 0];
+    });
+
+    graphEventManager.on("EdgeRemoved", (id: string) => {
+      const [sourceId, targetId] = id.split("->");
+      delete this.ctx.data.adjacencyTable()[sourceId][targetId];
+    });
   }
 
   private loadNodes(): void {
@@ -66,9 +117,9 @@ export class GraphContext {
         Object.entries(value).forEach(([targetId, target]: [string, any]) => {
           let length;
           if (model === "distance") {
-            length = target[0];
-          } else {
             length = target[1];
+          } else {
+            length = target[0];
           }
           const edgeId = Graph.getEdgeId(sourceId, targetId);
           const edge = {
@@ -82,7 +133,6 @@ export class GraphContext {
         });
       });
     });
-    console.log(this.graph.getEdges());
   }
 
   public clear(): void {
@@ -95,9 +145,13 @@ export class GraphContext {
     this.graph.clear();
 
     this.g.selectAll("*").remove();
+
+    this.model = null;
   }
 
   public init(model: "distance" | "time"): void {
+    this.model = model;
+
     this.svg.on("click", () => {});
 
     this.loadNodes();
@@ -106,6 +160,7 @@ export class GraphContext {
 
     this.graph.registerCallbacks(this.canvasEventManager);
     this.simulator.registerCallbacks(this.graphEventManager);
+    this.registerCallbacks(this.graphEventManager);
 
     this.canvasEventAnalyst.activate();
   }

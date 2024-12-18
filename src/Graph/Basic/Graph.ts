@@ -1,6 +1,7 @@
 import * as d3 from "d3";
 import { GraphEventManager } from "./EventManager";
 import { CanvasEventManager } from "../Renderer/EventManager";
+import { GraphContext } from "../GraphContext";
 
 /**
  * 节点接口，描述节点的属性。
@@ -39,7 +40,11 @@ export class Graph {
   /**
    * 构造函数，初始化图的结构。
    */
-  constructor(private eventManager: GraphEventManager, private canvas: SVGSVGElement) {
+  constructor(
+    private ctx: GraphContext,
+    private eventManager: GraphEventManager,
+    private canvas: SVGSVGElement
+  ) {
     // 基本数据结构，存储基本内容（节点、边、邻接表、索引管理器），应当第一个被初始化
     this.nodes = new Map();
     this.edges = new Map();
@@ -62,7 +67,6 @@ export class Graph {
         vx: 0,
         vy: 0,
       });
-      console.log(`New node created: ${id}`);
     });
     canvasEventManager.on("NodeDragEnd", (event: MouseEvent, nodeId, metaData) => {
       if (nodeId && metaData && "DragEndNode" in metaData) {
@@ -126,6 +130,7 @@ export class Graph {
     const key = Graph.getEdgeId(edge.source, edge.target);
     if (this.edges.has(key)) return;
 
+    edge.length = this.ctx.calculateDistance(edge.source, edge.target);
     this.edges.set(key, edge);
     (
       this.adjacencyList.get(edge.source) ??
@@ -201,6 +206,10 @@ export class Graph {
    */
   getNodeById(nodeId: string): Node | undefined {
     return this.nodes.get(nodeId);
+  }
+
+  getEdgeById(edgeId: string): Edge | undefined {
+    return this.edges.get(edgeId);
   }
 
   /**

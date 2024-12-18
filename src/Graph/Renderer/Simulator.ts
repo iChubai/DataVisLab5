@@ -34,8 +34,6 @@ export class ForceSimulator {
     const nodes = this.graph.getNodes();
     const edges = this.graph.getEdges();
 
-    console.log(nodes, edges);
-
     // 创建 D3 力学仿真
     this.simulation = d3
       .forceSimulation(nodes)
@@ -44,7 +42,7 @@ export class ForceSimulator {
         d3
           .forceLink<Node, Edge>(edges)
           .id((d) => d._id)
-          .distance((d) => d.length) // 使用edge的属性length作为边的长度
+          .distance((d) => d.length / 2) // 使用edge的属性length作为边的长度
       )
       .force("charge", d3.forceManyBody().strength(-50))
       .force("x", d3.forceX(this.width / 2).strength(0.05))
@@ -151,7 +149,7 @@ export class ForceSimulator {
       .append("path")
       .attr("fill", "none")
       .attr("stroke", "transparent")
-      .attr("stroke-width", 10)
+      .attr("stroke-width", 5)
       .on("mouseover", (event, edge) => {
         d3.select(event.target).attr("stroke", "lightblue");
         console.log("Mouseover on edge:", edge);
@@ -175,7 +173,7 @@ export class ForceSimulator {
       .selectAll<SVGLineElement, Edge>("line")
       .data(this.graph.getEdges(), (d: Edge) => `${d.source}-${d.target}`);
 
-    link.enter().append("line").attr("stroke", "gray").attr("stroke-width", 2);
+    link.enter().append("line").attr("stroke", "gray").attr("stroke-width", 1);
 
     link.exit().remove();
 
