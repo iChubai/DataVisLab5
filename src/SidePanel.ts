@@ -1,4 +1,6 @@
-class LeftSidePanel {
+import { Context } from "./Context";
+
+export class LeftSidePanel {
   private tabButtons: NodeListOf<Element>;
   private sidePanel: HTMLElement;
   private sidePanelTitle: HTMLElement;
@@ -95,7 +97,7 @@ class LeftSidePanel {
   }
 }
 
-class RightSidePanel {
+export class RightSidePanel {
   private sidebar_ids = [
     { button_id: "sidebarButton1", sidebar_id: "sidebar1", dragger_id: "dragger1" },
     { button_id: "sidebarButton2", sidebar_id: "sidebar2", dragger_id: "dragger2" },
@@ -171,12 +173,12 @@ class RightSidePanel {
   }
 }
 
-class TopSidePanel {
+export class TopSidePanel {
   private buttons_ids = ["btn-map-view", "btn-distance-view", "btn-time-view"];
 
   private buttons: Map<string, HTMLElement>;
 
-  constructor() {
+  constructor(private ctx: Context) {
     this.buttons = new Map();
     this.buttons_ids.forEach((button_id) => {
       const button =
@@ -192,26 +194,32 @@ class TopSidePanel {
     this.buttons.forEach((button, button_id) => {
       if (button_id === "btn-map-view") {
         button.addEventListener("click", () => {
-          console.log("地图视图");
+          this.changeToMapView();
         });
       } else if (button_id === "btn-distance-view") {
         button.addEventListener("click", () => {
-          console.log("距离视图");
+          this.changeToDistanceView();
         });
       } else if (button_id === "btn-time-view") {
         button.addEventListener("click", () => {
-          console.log("时间视图");
+          this.changeToTimeView();
         });
       }
     });
   }
-}
 
-window.onload = () => {
-  const leftSidePanel = new LeftSidePanel();
-  leftSidePanel.init();
-  const rightSidePanel = new RightSidePanel();
-  rightSidePanel.init();
-  const topSidePanel = new TopSidePanel();
-  topSidePanel.init();
-};
+  private changeToMapView() {
+    console.log("切换到地图视图");
+    this.ctx.renderMap();
+  }
+
+  private changeToDistanceView() {
+    console.log("切换到距离视图");
+    this.ctx.renderGraph("distance");
+  }
+
+  private changeToTimeView() {
+    console.log("切换到时间视图");
+    this.ctx.renderGraph("time");
+  }
+}
