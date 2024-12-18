@@ -108,12 +108,17 @@ export class ForceSimulator {
       .attr("id", (d) => `node-${d._id}`)
       .attr("r", (d) => NODE_DEFAULT_RADIUS)
       .attr("fill", (d) => "steelblue")
-      .on("mouseover", (event, node) => {
+      .each((d: any) => {
+        d.hoved = false;
+      })
+      .on("mouseover", (event, d: any) => {
         d3.select(event.target).attr("fill", "lightblue");
-        console.log("Mouseover on node:", node);
+        d.hoved = true;
+        console.log("Mouseover on node:", d);
       }) // 设置鼠标移入节点时变色
-      .on("mouseout", (event, node) => {
+      .on("mouseout", (event, d: any) => {
         d3.select(event.target).attr("fill", "steelblue");
+        d.hoved = false;
       }) // 设置鼠标移出节点时恢复
       // .on("dragstart", (event, node) => {
       //   d3.select(event.target).attr("fill", "skyblue");
@@ -147,14 +152,20 @@ export class ForceSimulator {
     edgePath
       .enter()
       .append("path")
+      .attr("id", (d) => `edge-${d._id}`)
       .attr("fill", "none")
       .attr("stroke", "transparent")
       .attr("stroke-width", 5)
-      .on("mouseover", (event, edge) => {
+      .each((d: any) => {
+        d.hoved = false;
+      })
+      .on("mouseover", (event, d: any) => {
         d3.select(event.target).attr("stroke", "lightblue");
-        console.log("Mouseover on edge:", edge);
+        d.hoved = true;
+        console.log("Mouseover on edge:", d);
       }) // 设置鼠标移入边时变色
-      .on("mouseout", (event, edge) => {
+      .on("mouseout", (event, d: any) => {
+        d.hoved = false;
         d3.select(event.target).attr("stroke", "transparent");
       }); // 设置鼠标移出边时恢复
 

@@ -17,7 +17,7 @@
 - 上方工具栏（见src/SidePanel.ts/TopSidePanel）：
     - [x] 可编辑模式切换
         - [x] 力交互展示模式
-        - [ ] 力交互修改节点和边
+        - [x] 力交互修改节点和边
         - [x] 实时保存修改结果
 - 中央区域（见src/Context.ts）：
     - [ ] 地图模式：显示铁路网的地理分布（见src/MapContext.ts）

@@ -112,7 +112,11 @@ export class Graph {
     if (!this.nodes.has(nodeId)) return;
 
     if (this.hasNeighbor(nodeId)) {
-      console.warn(`Node ${nodeId} has related edges, cannot remove it.`);
+      console.warn(
+        `Node ${nodeId} has related edges, cannot remove it. Egdes:`,
+        this.adjacencyList.get(nodeId)!.inEdges,
+        this.adjacencyList.get(nodeId)!.outEdges
+      );
       return;
     }
 

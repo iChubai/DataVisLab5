@@ -66,7 +66,7 @@ export class MapContext {
     const provinces = this.gMap.selectAll(".province");
     console.log("clicked");
     if (d.clicked) return this.reset(); // 若当前州已被点击，则重置视图
-    provinces.each(function (d: any) {
+    provinces.each((d: any) => {
       d.clicked = false; // 清除其他州的点击状态
     });
     d.clicked = true;

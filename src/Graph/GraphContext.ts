@@ -35,7 +35,7 @@ export class GraphContext {
     this.canvasEventAnalyst = new CanvasEventAnalyst(
       this.canvasEventManager,
       this.graph,
-      this.g.node()
+      this.svg.node()
     );
 
     this.simulator = null;

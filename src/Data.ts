@@ -57,7 +57,9 @@ export class Data {
           if (this._adjacencyTable[source_name]) {
             Object.entries(targets).forEach(
               ([target_name, [distance, duration, cost]]: [string, any]) => {
-                this._adjacencyTable[source_name][target_name] = [distance, duration, cost];
+                if (source_name !== target_name) {
+                  this._adjacencyTable[source_name][target_name] = [distance, duration, cost];
+                }
               }
             );
           }

@@ -23,16 +23,26 @@ export class CanvasEventAnalyst {
   activate(): void {
     this.canvas.addEventListener("mousedown", (event: MouseEvent) => {
       event.stopPropagation();
-      this.analyzeMouseDown(event);
+      if (event.button === 1) {
+        console.log("Middle mouse button clicked");
+        this.analyzeMouseDown(event);
+      }
     });
+
     this.canvas.addEventListener("mousemove", (event: MouseEvent) => {
       event.stopPropagation();
+      console.log("Middle mouse button dragged");
       this.analyzeMouseMove(event);
     });
+
     this.canvas.addEventListener("mouseup", (event: MouseEvent) => {
       event.stopPropagation();
-      this.analyzeMouseUp(event);
+      if (event.button === 1) {
+        console.log("Middle mouse button released");
+        this.analyzeMouseUp(event);
+      }
     });
+
     console.log("Canvas event analyst activated");
   }
 
@@ -115,15 +125,23 @@ export class CanvasEventAnalyst {
    * @returns {Node | null} 鼠标下的节点（如果存在）。
    */
   private findNodeUnderCursor(event: MouseEvent): Node | null {
-    const nodes = this.graph.getNodes();
-    const [x, y] = d3.pointer(event, this.canvas);
-    for (let node of nodes) {
-      const distance = Math.sqrt(Math.pow(node.x - x, 2) + Math.pow(node.y - y, 2));
-      if (distance < NODE_DEFAULT_RADIUS) {
-        return node;
-      }
-    }
-    return null;
+    const node = d3
+      .select(this.canvas)
+      .select("g")
+      .select(".nodes")
+      .selectAll("circle")
+      .filter((d: any) => d.hoved === true)
+      .node();
+    if (!(node instanceof Element)) return null;
+    // 获取node元素的attr “id”的值
+    const nodeId = (
+      node.getAttribute("id") ??
+      (() => {
+        console.error("Node id not found", node);
+        throw new Error("Node id not found");
+      }).call(null)
+    ).split("node-")[1];
+    return this.graph.getNodeById(nodeId) || null;
   }
 
   /**
@@ -132,25 +150,21 @@ export class CanvasEventAnalyst {
    * @returns {Edge | null} 鼠标下的边（如果存在）。
    */
   private findEdgeUnderCursor(event: MouseEvent): Edge | null {
-    const [x, y] = d3.pointer(event, this.canvas);
-    let foundEdge: Edge | null = null;
-
-    d3.select(this.canvas)
+    const edgePath = d3
+      .select(this.canvas)
+      .select("g")
       .select(".edges")
-      .selectAll<SVGPathElement, Edge>("path")
-      .each(function (edge) {
-        const pathElement = this as SVGPathElement;
-        const totalLength = pathElement.getTotalLength();
-        for (let i = 0; i <= totalLength; i += 1) {
-          const point = pathElement.getPointAtLength(i);
-          const distance = Math.sqrt(Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2));
-          if (distance < 5) {
-            foundEdge = edge;
-            return;
-          }
-        }
-      });
-
-    return foundEdge;
+      .selectAll("path")
+      .filter((d: any) => d.hoved === true)
+      .node();
+    if (!(edgePath instanceof Element)) return null;
+    const edgeId = (
+      edgePath.getAttribute("id") ??
+      (() => {
+        console.error("Edge id not found", edgePath);
+        throw new Error("Edge id not found");
+      }).call(null)
+    ).split("edge-")[1];
+    return this.graph.getEdgeById(edgeId) || null;
   }
 }
