@@ -34,6 +34,8 @@ export class ForceSimulator {
     const nodes = this.graph.getNodes();
     const edges = this.graph.getEdges();
 
+    console.log(nodes, edges);
+
     // 创建 D3 力学仿真
     this.simulation = d3
       .forceSimulation(nodes)

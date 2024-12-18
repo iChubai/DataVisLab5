@@ -1,6 +1,8 @@
 import * as d3 from "d3";
 import * as topojson from "topojson-client";
 import { FeatureCollection, Geometry } from "geojson";
+import { Context } from "./Context";
+import { NodeTable } from "./Data";
 
 export class MapContext {
   private width: number = 975;
@@ -17,7 +19,7 @@ export class MapContext {
   public zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   public projection: d3.GeoProjection;
 
-  constructor() {
+  constructor(private ctx: Context) {
     this.svg = d3.select("svg");
     this.g = this.svg.append("g").attr("class", "g");
     this.gMap = this.g.append("g").attr("class", "gMap");
@@ -176,82 +178,66 @@ export class MapContext {
 
   public renderNodes(): void {
     const transform = d3.zoomTransform(this.svg.node());
-    d3.json("./data/FilteredStationGeo.json").then((positionData: any) => {
-      this.gNodes
-        .selectAll("circle")
-        .data(Object.entries(positionData))
-        .join("circle")
-        .attr("cx", (d: any) => this.projection(d[1])![0]) // x 坐标
-        .attr("cy", (d: any) => this.projection(d[1])![1]) // y 坐标
-        .attr("r", 5 / transform.k) // 设置圆的半径
-        .attr("fill", "red") // 设置圆的填充颜色
-        .attr("stroke", "white") // 设置圆的边框颜色
-        .attr("stroke-width", 1 / transform.k);
-    });
+
+    const nodesData: NodeTable = this.ctx.data.nodes();
+    this.gNodes
+      .selectAll("circle")
+      .data(Object.entries(nodesData))
+      .join("circle")
+      .attr("cx", (d: any) => this.projection(d[1]["geo_info"])![0]) // x 坐标
+      .attr("cy", (d: any) => this.projection(d[1]["geo_info"])![1]) // y 坐标
+      .attr("r", 5 / transform.k) // 设置圆的半径
+      .attr("fill", "red") // 设置圆的填充颜色
+      .attr("stroke", "white") // 设置圆的边框颜色
+      .attr("stroke-width", 1 / transform.k);
   }
 
-  public renderLines(): void {
+  renderLines(): void {
     const transform = d3.zoomTransform(this.svg.node());
 
-    d3.json("./data/FilteredAccessInfo.json").then((stationsData: any) => {
-      const selectedStations = Object.keys(stationsData); // 获取站点的键（例如：长春、南昌等）
+    // 获取所有的节点数据
+    const nodes = this.ctx.data.nodes();
+    const adjacencyTable = this.ctx.data.adjacencyTable();
 
-      // 载入FilteredTrainInfo.json，并筛选相关数据
-      d3.json("./data/FilteredTrainInfo.json").then((trainData: any) => {
-        const filteredTrainData = trainData.filter((train: any) =>
-          train.stations.some((station: string) => selectedStations.includes(station))
-        );
+    // 遍历邻接表并根据地理信息绘制线路
+    const lines: { source: [number, number]; target: [number, number] }[] = [];
 
-        // 载入站点地理信息
-        d3.json("./data/FilteredStationGeo.json").then((stationGeo: any) => {
-          const trainLines = filteredTrainData
-            .map((train: any) => {
-              const trainStations = train.stations
-                .map((station: string) => stationGeo[station]) // 将站点转换为地理坐标
-                .filter((geo: any) => geo != undefined);
-
-              // 确保有两个以上的坐标点才能绘制
-              return trainStations.length > 1 ? { coords: trainStations } : null;
-            })
-            .filter((line: any) => line !== null);
-
-          // 绘制线路：
-
-          // 绘制每条火车线路
-          const lineGenerator = d3
-            .line()
-            .x(
-              (d: any) =>
-                (this.projection(d) ??
-                  (() => {
-                    throw new Error("Invalid coordinate");
-                  }).call(null))[0]
-            )
-            .y(
-              (d: any) =>
-                (this.projection(d) ??
-                  (() => {
-                    throw new Error("Invalid coordinate");
-                  }).call(null))[1]
-            );
-
-          // 使用不同的颜色区分不同的线路
-          const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-
-          this.gLines
-            .selectAll(".train-line")
-            .data(trainLines)
-            .enter()
-            .append("path")
-            .attr("class", "train-line")
-            .attr("d", (d: any) => lineGenerator(d.coords))
-            .attr("stroke", (d: any, i: any) => colorScale(i)) // 线路颜色
-            .attr("stroke-width", 2 / transform.k)
-            .attr("fill", "none")
-            .attr("opacity", 0.7);
+    Object.entries(adjacencyTable).forEach(([source_name, targets]) => {
+      const sourceGeo = nodes[source_name]?.geo_info;
+      if (sourceGeo) {
+        Object.entries(targets).forEach(([target_name, [distance, duration, cost]]) => {
+          const targetGeo = nodes[target_name]?.geo_info;
+          if (targetGeo) {
+            // 如果目标站点有地理信息，则绘制一条连接线路
+            lines.push({
+              source: sourceGeo,
+              target: targetGeo,
+            });
+          }
         });
-      });
+      }
     });
+
+    // 绘制线路：每一条线连接两个站点
+    const lineGenerator = d3
+      .line()
+      .x((d: any) => this.projection(d)![0])
+      .y((d: any) => this.projection(d)![1]);
+
+    // 使用不同的颜色区分不同的线路
+    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+
+    this.gLines
+      .selectAll(".train-line")
+      .data(lines)
+      .enter()
+      .append("path")
+      .attr("class", "train-line")
+      .attr("d", (d: any) => lineGenerator([d.source, d.target]))
+      .attr("stroke", (d: any, i: any) => colorScale(i)) // 线路颜色
+      .attr("stroke-width", 2 / transform.k)
+      .attr("fill", "none")
+      .attr("opacity", 0.7);
   }
 
   public init(): void {

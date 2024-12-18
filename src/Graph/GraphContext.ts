@@ -41,25 +41,27 @@ export class GraphContext {
   }
 
   private loadNodes(): void {
-    d3.json("./data/FilteredStationGeo.json").then((positionData: any) => {
-      Object.entries(positionData).forEach(([name, coordinates]: [string, any]) => {
-        // 将原始坐标应用投影和缩放：
-        const [x, y] = this.projection([coordinates[0], coordinates[1]])!;
-        const node = {
-          _id: name,
-          name,
-          x,
-          y,
-          vx: 0,
-          vy: 0,
-        };
-        this.graph.addNode(node);
-      });
+    const positionData = this.ctx.data.nodes();
+    Object.entries(positionData).forEach(([name, coordinates]: [string, any]) => {
+      // 将原始坐标应用投影和缩放：
+      coordinates = coordinates["geo_info"];
+      const [x, y] = this.projection([coordinates[0], coordinates[1]])!;
+      const node = {
+        _id: name,
+        name,
+        x,
+        y,
+        vx: 0,
+        vy: 0,
+      };
+      this.graph.addNode(node);
     });
   }
 
   private loadEdges(model: "distance" | "time"): void {
-    d3.json("data/FilteredAdjacencyInfo.json").then((data: any) => {
+    Promise.resolve(this.ctx.data.adjacencyTable()).then((data) => {
+      // 哦草了，不要问我为什么要把这里写成异步的。不这样写会有很奇怪的bug，天哪。不信你可以试试用下面注释里的内容跑一下。
+      // const data = this.ctx.data.adjacencyTable();
       Object.entries(data).forEach(([sourceId, value]: [string, any]) => {
         Object.entries(value).forEach(([targetId, target]: [string, any]) => {
           let length;
@@ -80,6 +82,7 @@ export class GraphContext {
         });
       });
     });
+    console.log(this.graph.getEdges());
   }
 
   public clear(): void {
