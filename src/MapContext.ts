@@ -3,6 +3,7 @@ import * as topojson from "topojson-client";
 import { FeatureCollection, Geometry } from "geojson";
 import { Context } from "./Context";
 import { NodeTable } from "./Data";
+import { Names } from "./Names";
 
 export class MapContext {
   private width: number = 975;
@@ -168,6 +169,7 @@ export class MapContext {
         .attr("d", path as any)
         .attr("fill", "rgba(0, 0, 0, 0.2)")
         .attr("class", "province")
+        .attr(Names.DataCategory, Names.DataCategory_Province)
         .each((d: any) => {
           d.clicked = false;
         });
@@ -189,7 +191,17 @@ export class MapContext {
       .attr("r", 5 / transform.k) // 设置圆的半径
       .attr("fill", "red") // 设置圆的填充颜色
       .attr("stroke", "white") // 设置圆的边框颜色
-      .attr("stroke-width", 1 / transform.k);
+      .attr("stroke-width", 1 / transform.k)
+      // .attr(Names.DataCategory, Names.DataCategory_Station)
+      .on("mouseover", (event: MouseEvent, d: any) => {
+        console.log("[MapContext] mouseover node: ", d);
+      })
+      .on("click", (event: MouseEvent, d: any) => {
+        // 阻止事件传播
+        event.stopPropagation();
+        console.log("[MapContext] clicked node: ", d);
+        this.ctx.exploreParams(Names.DataCategory_Station, d[0]);
+      });
   }
 
   renderLines(): void {
@@ -237,7 +249,8 @@ export class MapContext {
       .attr("stroke", (d: any, i: any) => colorScale(i)) // 线路颜色
       .attr("stroke-width", 2 / transform.k)
       .attr("fill", "none")
-      .attr("opacity", 0.7);
+      .attr("opacity", 0.7)
+      .attr(Names.DataCategory, Names.DataCategory_Track);
   }
 
   public init(): void {

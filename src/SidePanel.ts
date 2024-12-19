@@ -1,4 +1,5 @@
 import { Context } from "./Context";
+import { Names } from "./Names";
 
 export class LeftSidePanel {
   private tabButtons: NodeListOf<Element>;
@@ -8,39 +9,64 @@ export class LeftSidePanel {
 
   private splitPaneDragger: HTMLElement;
 
+  contentOnShow: "intro" | "filter" | "params" | undefined;
+
   constructor() {
     // 获取按钮和第二层侧边栏
-    this.tabButtons = document.querySelectorAll(".tabButton");
+    this.tabButtons = document.querySelectorAll(`.${Names.LeftPanel_TabButton}`);
     this.sidePanel =
-      document.getElementById("sidePanel") ??
+      document.getElementById(Names.LeftPanel_SidePanel) ??
       (() => {
         throw new Error("侧边栏元素不存在");
       }).call(this);
     this.sidePanelTitle =
-      document.getElementById("sidePanelTitle") ??
+      document.getElementById(Names.LeftPanel_SidePanelTitle) ??
       (() => {
         throw new Error("侧边栏标题元素不存在");
       }).call(this);
     this.sidePanelContent =
-      document.getElementById("sidePanelContent") ??
+      document.getElementById(Names.LeftPanel_SidePanelContent) ??
       (() => {
         throw new Error("侧边栏内容元素不存在");
       }).call(this);
 
     this.splitPaneDragger =
-      document.getElementById("splitPaneDragger") ??
+      document.getElementById(Names.LeftPanel_SplitPaneDragger) ??
       (() => {
         throw new Error("拖拽元素不存在");
       }).call(this);
   }
+
+  changeToParamsView() {
+    if (this.contentOnShow === "params") {
+      return;
+    }
+    console.log("切换到参数视图");
+    this.tabButtons.forEach((button) => {
+      button.classList.remove("selected");
+    });
+    const btnParams =
+      document.getElementById("btn-params") ??
+      (() => {
+        throw new Error("参数按钮元素不存在");
+      }).call(this);
+    btnParams.classList.add("selected");
+    this.contentOnShow = "params";
+    this.sidePanelTitle.innerText = "参数";
+    this.sidePanelContent.innerHTML = "<p>这是参数内容。</p>";
+    this.sidePanel.classList.remove("hidden");
+  }
+
   public init() {
     // 监听按钮点击事件，切换内容或收起侧边栏
     this.tabButtons.forEach((button) => {
       button.addEventListener("click", () => {
+        console.log("[LeftSidePanel] button clicked: ", button.id);
         // 如果点击的是当前已选中的按钮，收起侧边栏
         if (button.classList.contains("selected")) {
           this.sidePanel.classList.add("hidden");
           button.classList.remove("selected");
+          this.contentOnShow = undefined;
         } else {
           // 先移除所有按钮的选中状态
           this.tabButtons.forEach((btn) => btn.classList.remove("selected"));
@@ -51,12 +77,15 @@ export class LeftSidePanel {
           if (button.id === "btn-intro") {
             this.sidePanelTitle.innerText = "介绍";
             this.sidePanelContent.innerHTML = "<p>这是介绍内容。</p>";
+            this.contentOnShow = "intro";
           } else if (button.id === "btn-filter") {
             this.sidePanelTitle.innerText = "过滤器";
             this.sidePanelContent.innerHTML = "<p>这是过滤器内容。</p>";
+            this.contentOnShow = "filter";
           } else if (button.id === "btn-params") {
             this.sidePanelTitle.innerText = "参数";
             this.sidePanelContent.innerHTML = "<p>这是参数内容。</p>";
+            this.contentOnShow = "params";
           }
 
           // 显示第二层侧边栏

@@ -1,16 +1,24 @@
 import { Data } from "./Data";
 import { GraphContext } from "./Graph/GraphContext";
 import { MapContext } from "./MapContext";
+import { ParamsExplorer } from "./ParamsExplorer";
 import { LeftSidePanel, RightSidePanel, TopSidePanel } from "./SidePanel";
 
 export class Context {
   data: Data;
+  private paramsExporer: ParamsExplorer;
 
-  private graphContext: GraphContext;
   private mapContext: MapContext;
+  private graphContext: GraphContext;
+
+  private leftSidePanel: LeftSidePanel;
+  private rightSidePanel: RightSidePanel;
+  private topSidePanel: TopSidePanel;
 
   constructor() {
     this.data = new Data();
+    this.paramsExporer = new ParamsExplorer(this, this.data);
+
     this.mapContext = new MapContext(this);
     this.graphContext = new GraphContext(this, this.mapContext.zoom, this.mapContext.projection);
 
@@ -18,13 +26,13 @@ export class Context {
       this.mapContext.render();
     });
 
+    this.leftSidePanel = new LeftSidePanel();
+    this.rightSidePanel = new RightSidePanel();
+    this.topSidePanel = new TopSidePanel(this);
     window.onload = () => {
-      const leftSidePanel = new LeftSidePanel();
-      leftSidePanel.init();
-      const rightSidePanel = new RightSidePanel();
-      rightSidePanel.init();
-      const topSidePanel = new TopSidePanel(this);
-      topSidePanel.init();
+      this.leftSidePanel.init();
+      this.rightSidePanel.init();
+      this.topSidePanel.init();
     };
   }
 
@@ -40,6 +48,11 @@ export class Context {
     this.graphContext.clear();
     this.graphContext.init(model);
     this.graphContext.render();
+  }
+
+  exploreParams(dataCategory: string, id?: string): void {
+    if (this.leftSidePanel.contentOnShow !== "params") this.leftSidePanel.changeToParamsView();
+    this.paramsExporer.explore(dataCategory, id);
   }
 }
 
