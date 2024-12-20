@@ -49,9 +49,9 @@
          <!-- 按钮容器 -->
     <div class="button-container">
       <div class="sidebar-button sidebar-group-1" id="sidebarButton1"></div>
-      <div class="sidebar-button sidebar-group-2" id="sidebarButton2"></div>
-      <div class="sidebar-button sidebar-group-3" id="sidebarButton3"></div>
-      <div class="sidebar-button sidebar-group-4" id="sidebarButton4"></div>
+      <div class="sidebar-button sidebar-group-2" id="sidebarButton2">通行时间分布图</div>
+      <div class="sidebar-button sidebar-group-3" id="sidebarButton3">最近邻工具</div>
+      <div class="sidebar-button sidebar-group-4" id="sidebarButton4">节点度分布图</div>
     </div>
 
     <!-- 侧边栏内容 -->
@@ -68,53 +68,36 @@
       </div>
 
       <div class="sidebar sidebar-group-2" id="sidebar2">
-        <div class="dragger" id="dragger2"></div>
-        <div class="sidebar-content">
-          <table border="1" width="100%">
-            <tr>
-              <th>姓名</th>
-              <th>年龄</th>
-            </tr>
-            <tr>
-              <td>张三</td>
-              <td>25</td>
-            </tr>
-            <tr>
-              <td>李四</td>
-              <td>30</td>
-            </tr>
-          </table>
-        </div>
+        <div class="sidebar sidebar-group-1" id="sidebar1">
+          <div class="dragger" id="dragger1"></div>
+          <div class="sidebar-content">
+            <h3>通行时间分布图</h3>
+            <div id="time-distribution-chart" class="chart"></div>
+          </div>
       </div>
 
       <div class="sidebar sidebar-group-3" id="sidebar3">
         <div class="dragger" id="dragger3"></div>
         <div class="sidebar-content">
-          <img
-            src="https://via.placeholder.com/150/ff5722"
-            alt="Image"
-            style="width: 100%; height: auto"
-          />
+          <h3>最近邻工具</h3>
+          <div id="nearest-neighbor-tool">
+            <label for="selected-node">选择节点:</label>
+            <select id="selected-node">
+              <!-- 动态填充节点选项 -->
+            </select>
+            <button id="find-nearest-neighbors">查找最近邻</button>
+          </div>
+          <div id="nearest-neighbor-result">
+            <!-- 显示最近邻结果 -->
+          </div>
         </div>
       </div>
 
       <div class="sidebar sidebar-group-4" id="sidebar4">
         <div class="dragger" id="dragger4"></div>
         <div class="sidebar-content">
-          <table border="1" width="100%">
-            <tr>
-              <th>产品</th>
-              <th>价格</th>
-            </tr>
-            <tr>
-              <td>产品A</td>
-              <td>￥100</td>
-            </tr>
-            <tr>
-              <td>产品B</td>
-              <td>￥200</td>
-            </tr>
-          </table>
+          <h3>节点度分布图</h3>
+          <div id="degree-distribution-chart" class="chart"></div>
         </div>
       </div>
 

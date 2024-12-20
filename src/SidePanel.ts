@@ -1,5 +1,8 @@
 import { Context } from "./Context";
 import { Names } from "./Names";
+import * as d3 from "d3";
+import { TimeDistributionChart } from "./TimeDistributionChart";
+import { DegreeDistributionChart } from "./DegreeDistributionChart";
 
 export class LeftSidePanel {
   private tabButtons: NodeListOf<Element>;
@@ -169,7 +172,10 @@ export class LeftSidePanel {
     });
   }
 }
-
+interface NearestNeighbor {
+  id: string;
+  distance: number;
+}
 export class RightSidePanel {
   private sidebar_ids = [
     { button_id: "sidebarButton1", sidebar_id: "sidebar1", dragger_id: "dragger1" },
@@ -178,8 +184,9 @@ export class RightSidePanel {
     { button_id: "sidebarButton4", sidebar_id: "sidebar4", dragger_id: "dragger4" },
   ];
   private buttons: { button: HTMLElement; sidebar: HTMLElement }[];
-
-  constructor() {
+  private timeDistributionChart: TimeDistributionChart;
+  private degreeDistributionChart: DegreeDistributionChart;
+  constructor(private ctx: Context) {
     this.buttons = [];
     this.sidebar_ids.forEach(({ button_id, sidebar_id, dragger_id }) => {
       const button =
@@ -194,26 +201,53 @@ export class RightSidePanel {
         }).call(this);
       this.buttons.push({ button, sidebar });
     });
-
+    this.timeDistributionChart = new TimeDistributionChart();
+    this.degreeDistributionChart = new DegreeDistributionChart();
     this.buttons.forEach(({ button, sidebar }) => {
       button.addEventListener("click", () => {
-        console.log(sidebar.style.display);
-        sidebar.style.display = sidebar.style.display === "block" ? "none" : "block";
+        this.toggleSidebar(sidebar);
+        this.initializeChart(sidebar.id);
       });
     });
   }
-
+   /**
+   * 切换侧边栏的显示状态
+   * @param sidebar 需要切换显示状态的侧边栏元素
+   */
+   private toggleSidebar(sidebar: HTMLElement) {
+    const isVisible = sidebar.style.display === "block";
+    // 隐藏所有侧边栏
+    this.buttons.forEach(b => b.sidebar.style.display = "none");
+    // 如果之前未显示，显示当前侧边栏
+    if (!isVisible) {
+      sidebar.style.display = "block";
+    }
+  }
+  /**
+   * 根据侧边栏 ID 初始化相应的图表
+   * @param sidebarId 侧边栏的 ID
+   */
+  private initializeChart(sidebarId: string) {
+    if (sidebarId === "sidebar1") {
+      const data = this.ctx.getTraversalTimeData();
+      this.timeDistributionChart.render(data);
+    } else if (sidebarId === "sidebar3") {
+      const data = this.ctx.getDegreeDistributionData();
+      this.degreeDistributionChart.render(data);
+    }
+    // 如果有更多侧边栏和图表，可以在这里添加相应的逻辑
+  }
+  /**
+   * 为侧边栏添加拖拽功能
+   * @param draggerId 拖拽控件的 ID
+   * @param sidebarId 侧边栏的 ID
+   */
   private addDraggable(draggerId: string, sidebarId: string) {
-    const dragger =
-      document.getElementById(draggerId) ??
-      (() => {
-        throw new Error(`拖拽元素${draggerId}不存在`);
-      }).call(null);
-    const sidebar =
-      document.getElementById(sidebarId) ??
-      (() => {
-        throw new Error(`侧边栏${sidebarId}不存在`);
-      }).call(null);
+    const dragger = document.getElementById(draggerId);
+    const sidebar = document.getElementById(sidebarId);
+    if (!dragger || !sidebar) {
+      throw new Error(`拖拽元素不存在：${draggerId}, ${sidebarId}`);
+    }
 
     let isDragging = false;
     let startY: number;
@@ -222,28 +256,100 @@ export class RightSidePanel {
     dragger.addEventListener("mousedown", (e) => {
       isDragging = true;
       startY = e.clientY;
-      startTop = parseInt(window.getComputedStyle(sidebar).top, 10);
+      startTop = parseInt(window.getComputedStyle(sidebar).top, 10) || 0;
       e.preventDefault();
     });
 
-    document.addEventListener("mousemove", (e) => {
+    const onMouseMove = (e: MouseEvent) => {
       if (!isDragging) return;
       const deltaY = e.clientY - startY;
       const newTop = startTop + deltaY;
-      sidebar.style.top = `${newTop}px`;
-    });
+      const maxTop = window.innerHeight - sidebar.offsetHeight;
+      if (newTop >= 0 && newTop <= maxTop) {
+        sidebar.style.top = `${newTop}px`;
+      }
+    };
 
-    document.addEventListener("mouseup", () => {
+    const onMouseUp = () => {
       isDragging = false;
-    });
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
   }
 
-  public init() {
-    // 为每个侧边栏添加拖拽事件
-    this.sidebar_ids.forEach(({ button_id, sidebar_id, dragger_id }) => {
-      this.addDraggable(dragger_id, sidebar_id);
-    });
+ /**
+   * 初始化右侧边栏，包括拖拽功能和最近邻工具
+   */
+ public init() {
+  // 为每个侧边栏添加拖拽事件
+  this.sidebar_ids.forEach(({ dragger_id, sidebar_id }) => {
+    this.addDraggable(dragger_id, sidebar_id);
+  });
+
+  // 初始化最近邻工具
+  this.initNearestNeighborTool();
+}
+ /**
+   * 初始化最近邻工具
+   */
+ private initNearestNeighborTool() {
+  const selectNode = document.getElementById("selected-node") as HTMLSelectElement;
+  const findButton = document.getElementById("find-nearest-neighbors") as HTMLButtonElement;
+  const resultDiv = document.getElementById("nearest-neighbor-result") as HTMLElement;
+
+  if (!selectNode || !findButton || !resultDiv) {
+    throw new Error("最近邻工具的元素未正确加载");
   }
+
+  // 填充节点选项
+//   const nodes = this.ctx.data.graph.getNodes();会报错类型“Data”上不存在属性“graph”。
+    // const nodes = this.ctx.data.graph.getNodes();
+  // 添加按钮点击事件
+  // findButton.addEventListener("click", () => {
+  //   const selectedCity = selectNode.value;
+  //   if (!selectedCity) {
+  //     alert("请选择一个城市！");
+  //     return;
+  //   }
+  //   try {
+  //     // 获取节点 ID 通过城市名称
+  //     const node = this.ctx.data.graph.getNodes().find((n) => n.name === selectedCity);
+  //     if (!node) {
+  //       alert("未找到选定城市的节点信息。");
+  //       return;
+  //     }
+
+  //     const nearestNeighbors: NearestNeighbor[] = this.ctx.getNearestNeighbors(node._id, 5);
+  //     if (nearestNeighbors.length === 0) {
+  //       resultDiv.innerHTML = `<p>未找到最近邻城市。</p>`;
+  //       return;
+  //     }
+  //     // const listItems = nearestNeighbors.map(nn => `<li>${this.ctx.data.graph.getNodeById(nn.id)?.name} (距离: ${nn.distance.toFixed(2)})</li>`).join("");
+  //     const listItems = nearestNeighbors.map(
+  //       (nn) =>
+  //         `<li>${this.ctx.data.graph.getNodeById(nn.id)?.name} (距离: ${nn.distance.toFixed(2)})</li>`
+  //       ).join("");
+  //     resultDiv.innerHTML = `<h4>最近邻城市：</h4><ul>${listItems}</ul>`;
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("发生错误，无法查找最近邻城市。");
+  //   }
+  // });
+}
+
+/**
+ * 提供访问图表实例的方法
+ */
+public getTimeDistributionChart(): TimeDistributionChart {
+  return this.timeDistributionChart;
+}
+
+public getDegreeDistributionChart(): DegreeDistributionChart {
+  return this.degreeDistributionChart;
+}
 }
 
 export class TopSidePanel {

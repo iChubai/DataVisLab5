@@ -186,7 +186,12 @@ export class Graph {
   static getTargetId(edgeId: string): string {
     return edgeId.split("->")[1];
   }
-
+  //写一个适配const distance = Graph.getDistance(sourceGeoInfo, nodes[nodeId].geo_info);调用形式的函数
+  static getDistance(sourceGeoInfo: any, targetGeoInfo: any): number {
+    const dx = targetGeoInfo.x - sourceGeoInfo.x;
+    const dy = targetGeoInfo.y - sourceGeoInfo.y;
+    return Math.sqrt(dx * dx + dy * dy);
+    }
   /**
    * 获取图中的所有节点。
    * @returns {Node[]} 节点数组。
