@@ -17,6 +17,7 @@ body {
   right: 0;
   gap: 10px;
   background-color: #3a3a3a;
+  z-index: 9999;
 }
 
 /* 侧边栏按钮样式 */
