@@ -2,6 +2,7 @@ import { c } from "vite/dist/node/types.d-aGj9QkWt";
 import { Context } from "./Context";
 import { Data, NodeTable } from "./Data";
 import { Names } from "./Names";
+import { Graph } from "./Graph/Basic/Graph";
 
 export class ParamsExplorer {
   private sidePanelContent: HTMLElement;
@@ -17,22 +18,33 @@ export class ParamsExplorer {
   explore(dataCategory: string, id?: string) {
     this.dataCategory = dataCategory;
 
-    if (dataCategory === Names.DataCategory_Station && id) {
-      this.exploreNodeParams(id);
+    if (typeof id !== "string") {
+      console.warn("[ParamsExplorer] id: ", id);
+      throw new Error("[ParamsExplorer] Invalid id");
     }
-  }
 
-  exploreNodeParams(id: string) {
-    const nodeParams: {
+    let targetParams: {
       [key: string]: any;
-    } = this.data.nodes()[id]; // 获取节点参数
+    };
+    if (dataCategory === Names.DataCategory_Station && id) targetParams = this.data.nodes()[id];
+    else if (dataCategory === Names.DataCategory_Track && id) {
+      const sourceId = Graph.getSourceId(id);
+      const targetId = Graph.getTargetId(id);
+      targetParams =
+        this.data.adjacencyTable()[sourceId][targetId] ??
+        this.data.adjacencyTable()[targetId][sourceId];
+    } else {
+      throw new Error("[ParamsExplorer] Invalid dataCategory or id");
+    }
+
+    console.log("[ParamsExplorer] explore", id, targetParams);
 
     // 创建一个表单元素来展示参数
     const parameterForm = document.createElement("form");
     parameterForm.style.display = "block";
 
     // 递归处理参数对象并生成表单
-    this.createFormFields(id, nodeParams, parameterForm);
+    this.createFormFields(id, targetParams, parameterForm);
 
     // 清空侧边栏并将表单添加到侧边栏内容中
     this.sidePanelContent.innerHTML = ""; // 清空当前内容（如果需要重新渲染）

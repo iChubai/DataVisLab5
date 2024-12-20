@@ -10,5 +10,3 @@ export const Names = {
   DataCategory_Station: "data-category-station",
   DataCategory_Track: "data-category-track",
 } as const;
-
-export type ObjectKind = "province" | "station" | "track";

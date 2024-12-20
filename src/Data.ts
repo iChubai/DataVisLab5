@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import { Graph } from "./Graph/Basic/Graph";
 
 export type NodeTable = {
   [id: string]: {
@@ -12,7 +13,12 @@ export type NodeTable = {
 
 export type AdjacencyTable = {
   [source_name: string]: {
-    [target_name: string]: [number, number, number];
+    [target_name: string]: {
+      id: string;
+      name: string;
+
+      params?: [number, number, number];
+    };
   };
 };
 
@@ -56,9 +62,18 @@ export class Data {
         Object.entries(data_2).forEach(([source_name, targets]: [string, any]) => {
           if (this._adjacencyTable[source_name]) {
             Object.entries(targets).forEach(
-              ([target_name, [distance, duration, cost]]: [string, any]) => {
-                if (source_name !== target_name) {
-                  this._adjacencyTable[source_name][target_name] = [distance, duration, cost];
+              ([target_name, [duration_minute, distance_km, _]]: [string, any]) => {
+                if (
+                  source_name !== target_name &&
+                  this._adjacencyTable[target_name][source_name] === undefined
+                ) {
+                  const name = Graph.getEdgeId(source_name, target_name);
+                  this._adjacencyTable[source_name][target_name] = {
+                    id: name,
+                    name: name,
+
+                    params: [duration_minute, distance_km, _],
+                  };
                 }
               }
             );

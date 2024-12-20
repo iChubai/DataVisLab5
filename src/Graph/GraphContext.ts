@@ -82,7 +82,7 @@ export class GraphContext {
     graphEventManager.on("EdgeAdded", (id: string) => {
       const [sourceId, targetId] = id.split("->");
       const distance = this.graph.getEdgeById(id)!.length * (this.model === "distance" ? 1 : 3);
-      this.ctx.data.adjacencyTable()[sourceId][targetId] = [distance, 3 * distance, 0];
+      this.ctx.data.adjacencyTable()[sourceId][targetId].params = [distance, 3 * distance, 0];
     });
 
     graphEventManager.on("EdgeRemoved", (id: string) => {

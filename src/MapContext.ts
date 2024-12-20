@@ -4,6 +4,7 @@ import { FeatureCollection, Geometry } from "geojson";
 import { Context } from "./Context";
 import { NodeTable } from "./Data";
 import { Names } from "./Names";
+import { Graph } from "./Graph/Basic/Graph";
 
 export class MapContext {
   private width: number = 975;
@@ -212,16 +213,17 @@ export class MapContext {
     const adjacencyTable = this.ctx.data.adjacencyTable();
 
     // 遍历邻接表并根据地理信息绘制线路
-    const lines: { source: [number, number]; target: [number, number] }[] = [];
+    const lines: { id: string; source: [number, number]; target: [number, number] }[] = [];
 
     Object.entries(adjacencyTable).forEach(([source_name, targets]) => {
       const sourceGeo = nodes[source_name]?.geo_info;
       if (sourceGeo) {
-        Object.entries(targets).forEach(([target_name, [distance, duration, cost]]) => {
+        Object.entries(targets).forEach(([target_name, edge]) => {
           const targetGeo = nodes[target_name]?.geo_info;
           if (targetGeo) {
             // 如果目标站点有地理信息，则绘制一条连接线路
             lines.push({
+              id: Graph.getEdgeId(source_name, target_name),
               source: sourceGeo,
               target: targetGeo,
             });
@@ -250,7 +252,16 @@ export class MapContext {
       .attr("stroke-width", 2 / transform.k)
       .attr("fill", "none")
       .attr("opacity", 0.7)
-      .attr(Names.DataCategory, Names.DataCategory_Track);
+      .attr(Names.DataCategory, Names.DataCategory_Track)
+      .on("mouseover", (event: MouseEvent, d: any) => {
+        console.log("[MapContext] mouseover line: ", d);
+      })
+      .on("click", (event: MouseEvent, d: any) => {
+        // 阻止事件传播
+        event.stopPropagation();
+        console.log("[MapContext] clicked line: ", d);
+        this.ctx.exploreParams(Names.DataCategory_Track, d["id"]);
+      });
   }
 
   public init(): void {
@@ -298,9 +309,42 @@ export class MapContext {
       .attr("stroke-width", 1 / transform.k); // 更新边框宽度
   }
 
-  public rerender(dataCategory: string, id: string): void {
-    if (dataCategory === Names.DataCategory_Station) {
-      this.rerenderNode(id);
+  private rerenderLine(id: string): void {
+    const transform = d3.zoomTransform(this.svg.node());
+
+    const adjacencyTable = this.ctx.data.adjacencyTable();
+    const sourceId = Graph.getSourceId(id);
+    const targetId = Graph.getTargetId(id);
+    const lineData = adjacencyTable[sourceId][targetId] ?? adjacencyTable[targetId][sourceId];
+    if (!lineData) {
+      console.log(`[MapContext] Line with id ${id} not found.`);
+      return;
     }
+
+    const lineGenerator = d3
+      .line()
+      .x((d: any) => this.projection(d)![0])
+      .y((d: any) => this.projection(d)![1]);
+
+    // 更新指定线的属性
+    this.gLines
+      .selectAll(".train-line")
+      .filter((d: any) => d[0] === id) // 根据 ID 过滤出对应的线
+      .attr("d", (d: any) => {
+        const sourceGeo = this.ctx.data.nodes()[sourceId]["geo_info"];
+        const targetGeo = this.ctx.data.nodes()[targetId]["geo_info"];
+        if (sourceGeo && targetGeo) {
+          return lineGenerator([sourceGeo, targetGeo]);
+        } else {
+          return "";
+        }
+      })
+      .attr("stroke", "blue") // 更新线的颜色（可以自定义）
+      .attr("stroke-width", 2 / transform.k); // 更新线的宽度
+  }
+
+  public rerender(dataCategory: string, id: string): void {
+    if (dataCategory === Names.DataCategory_Station) this.rerenderNode(id);
+    else if (dataCategory === Names.DataCategory_Track) this.rerenderLine(id);
   }
 }
