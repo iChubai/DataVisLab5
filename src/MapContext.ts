@@ -275,4 +275,32 @@ export class MapContext {
   public clear(): void {
     this.g.selectAll("*").remove();
   }
+
+  private rerenderNode(id: string): void {
+    const transform = d3.zoomTransform(this.svg.node());
+
+    // 获取指定 ID 的节点数据
+    const nodeData = this.ctx.data.nodes()[id];
+    if (!nodeData) {
+      console.log(`[MapContext] Node with id ${id} not found.`);
+      return;
+    }
+
+    // 更新指定节点的属性
+    this.gNodes
+      .selectAll("circle")
+      .filter((d: any) => d[0] === id) // 根据 ID 过滤出对应的节点
+      .attr("cx", (d: any) => this.projection(nodeData["geo_info"]!)![0]) // 更新 x 坐标
+      .attr("cy", (d: any) => this.projection(nodeData["geo_info"]!)![1]) // 更新 y 坐标
+      .attr("r", 5 / transform.k) // 更新圆的半径
+      .attr("fill", "blue") // 更新填充颜色（可以自定义）
+      .attr("stroke", "white") // 更新边框颜色
+      .attr("stroke-width", 1 / transform.k); // 更新边框宽度
+  }
+
+  public rerender(dataCategory: string, id: string): void {
+    if (dataCategory === Names.DataCategory_Station) {
+      this.rerenderNode(id);
+    }
+  }
 }

@@ -54,6 +54,10 @@ export class Context {
     if (this.leftSidePanel.contentOnShow !== "params") this.leftSidePanel.changeToParamsView();
     this.paramsExporer.explore(dataCategory, id);
   }
+
+  rerender(dataCategory: string, id: string): void {
+    this.mapContext.rerender(dataCategory, id);
+  }
 }
 
 const ctx = new Context();

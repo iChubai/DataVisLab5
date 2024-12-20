@@ -1,9 +1,12 @@
+import { c } from "vite/dist/node/types.d-aGj9QkWt";
 import { Context } from "./Context";
 import { Data, NodeTable } from "./Data";
 import { Names } from "./Names";
 
 export class ParamsExplorer {
   private sidePanelContent: HTMLElement;
+
+  private dataCategory: string | null = null;
 
   constructor(private ctx: Context, private data: Data) {
     this.sidePanelContent = document.getElementById(
@@ -12,6 +15,8 @@ export class ParamsExplorer {
   }
 
   explore(dataCategory: string, id?: string) {
+    this.dataCategory = dataCategory;
+
     if (dataCategory === Names.DataCategory_Station && id) {
       this.exploreNodeParams(id);
     }
@@ -19,66 +24,74 @@ export class ParamsExplorer {
 
   exploreNodeParams(id: string) {
     const nodeParams: {
-      id: string;
-      name: string;
-      access_info?: number;
-      geo_info?: [number, number]; // 经度，纬度 [longitude, latitude]
-    } = this.data.nodes()[id];
+      [key: string]: any;
+    } = this.data.nodes()[id]; // 获取节点参数
 
     // 创建一个表单元素来展示参数
     const parameterForm = document.createElement("form");
     parameterForm.style.display = "block";
 
-    // 添加节点类型和 ID 标签
-    const typeLabel = document.createElement("label");
-    typeLabel.textContent = "Node " + id;
-    typeLabel.style.display = "block";
-    parameterForm.appendChild(typeLabel);
+    // 递归处理参数对象并生成表单
+    this.createFormFields(id, nodeParams, parameterForm);
 
-    // 遍历参数并动态创建对应的表单控件
+    // 清空侧边栏并将表单添加到侧边栏内容中
+    this.sidePanelContent.innerHTML = ""; // 清空当前内容（如果需要重新渲染）
+    this.sidePanelContent.appendChild(parameterForm);
+  }
+
+  createFormFields(
+    id: string,
+    nodeParams: { [key: string]: any },
+    container: HTMLElement,
+    parentKey: string = ""
+  ) {
     Object.entries(nodeParams).forEach(([key, value]) => {
-      const label = document.createElement("label");
-      label.textContent = key; // 参数名称
+      console.log(nodeParams, key, value);
+      const fullKey = parentKey ? `${parentKey}.${key}` : key; // 处理嵌套字段的 key（用于唯一标识）
+
+      let label = document.createElement("label");
+      label.textContent = fullKey; // 显示字段名
       label.style.display = "block";
 
       let input: HTMLElement;
 
-      // 根据参数类型生成不同的控件
-      switch (key) {
-        case "access_info":
-          input = document.createElement("input");
-          (input as HTMLInputElement).type = "number";
-          (input as HTMLInputElement).value = String(value ?? ""); // 填入当前值
-          break;
+      // 判断值的类型并创建相应的输入控件
+      if (typeof value === "object" && !Array.isArray(value)) {
+        // 如果是对象，递归生成其内部字段
+        input = document.createElement("div");
+        input.style.marginLeft = "20px"; // 给嵌套的字典加一些左边距
+        this.createFormFields(id, value, input, fullKey); // 递归调用
+      } else if (Array.isArray(value)) {
+        // 如果是数组，直接修改原数组的元素
+        input = document.createElement("div");
 
-        case "geo_info":
-          input = document.createElement("div");
-          const [longitude, latitude] = value as [number, number];
+        const arrayKey = fullKey;
+        this.createFormFields(id, value, input, arrayKey); // 递归调用，直接传递原数组引用
+      } else {
+        // 处理基础数据类型 (number 或 string)
+        input = document.createElement("input");
+        (input as HTMLInputElement).type = typeof value; // 设置 input 类型（number 或 text）
+        (input as HTMLInputElement).value = String(value ?? ""); // 设置默认值
 
-          const longitudeInput = document.createElement("input");
-          longitudeInput.type = "number";
-          longitudeInput.value = String(longitude);
+        // 监听值变化并更新数据
+        input.addEventListener("change", (e) => {
+          if (e.target) {
+            const newValue = (e.target as HTMLInputElement).value;
 
-          const latitudeInput = document.createElement("input");
-          latitudeInput.type = "number";
-          latitudeInput.value = String(latitude);
+            // 更新数据
+            if (typeof value === "number") {
+              nodeParams[key] = isNaN(Number(newValue)) ? value : Number(newValue);
+            } else {
+              nodeParams[key] = newValue;
+            }
 
-          input.appendChild(longitudeInput);
-          input.appendChild(latitudeInput);
-          break;
-
-        case "id":
-        case "name":
-          input = document.createElement("input");
-          (input as HTMLInputElement).type = "text";
-          (input as HTMLInputElement).value = String(value ?? ""); // 填入当前值
-          break;
-
-        default:
-          throw new Error(`Unsupported parameter key: ${key}`);
+            // 更新视图
+            this.ctx.rerender(this.dataCategory!, id);
+          }
+        });
       }
 
-      // 创建表格行，显示标签和输入控件
+      // 将标签和输入框加入到容器中
       const formRow = document.createElement("div");
       formRow.style.display = "flex";
       formRow.style.marginBottom = "10px";
@@ -93,11 +106,7 @@ export class ParamsExplorer {
 
       formRow.appendChild(labelContainer);
       formRow.appendChild(inputContainer);
-      parameterForm.appendChild(formRow);
+      container.appendChild(formRow);
     });
-
-    // 清空侧边栏并将表单添加到侧边栏内容中
-    this.sidePanelContent.innerHTML = ""; // 清空当前内容（如果需要重新渲染）
-    this.sidePanelContent.appendChild(parameterForm);
   }
 }
