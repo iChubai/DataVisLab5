@@ -76,7 +76,50 @@ export class LeftSidePanel {
           // 根据按钮不同切换第二层侧边栏的内容
           if (button.id === "btn-intro") {
             this.sidePanelTitle.innerText = "介绍";
-            this.sidePanelContent.innerHTML = "<p>这是介绍内容。</p>";
+            const introContent = `
+            <p class="intro-text">本项目旨在提供可交互的铁路信息可视化分析工具，侧重于分析站点间的最短距离和最短通行时间，以及站点和线路的新建或删除对铁路运行的影响。</p>
+            <p class="intro-text">使用指南：</p>
+            <ul class="intro-text">
+              <li>缩放与平移</li>
+              <ul class="intro-text">
+                <li>鼠标滚轮滚动：放大或缩小视图。</li>
+                <li>鼠标左键拖动：平移视图。</li>
+                <li>双击鼠标左键：放大视图</li>
+                <li>在地图视图下点击省份：聚焦到该省份。再次点击该省份可恢复正常视图。</li>
+                <li>在地图视图下点击空白区域：恢复正常视图。</li>
+              </ul>
+              <li>一般交互（适用于所有视图）</li>
+              <ul class="intro-text">
+                <li>鼠标左键点击站点或线路：在左侧边栏“参数”中显示该站点或线路的属性信息。</li>
+              </ul>
+              <li>拓扑视图下的额外交互</li>
+              <ul class="intro-text">
+                <li>鼠标中键单击空白区域：添加节点。</li>
+                <li>鼠标左键拖动节点：拖动节点。如果松开鼠标时光标指向另一个节点，则在两点间添加一条边。</li>
+                <li>鼠标中键按住并拖动：删除光标经过的边和节点。一个节点只有在没有边连接时才能被删除。</li>
+              </ul>
+              <ul class="intro-text">
+                <li>点击节点：显示该节点的属性信息。</li>
+                <li>顶部按钮：用于切换视图。</li>
+                <ul class="intro-text">
+                  <li>地图视图：展示站点地理位置以及铁路连接情况。</li>
+                  <li>距离拓扑：展示节点间的拓扑连接关系，图中边长与距离成正比。可以在此视图中交互地增删节点和边。</li>
+                  <li>时间视图：图中边长与通行时间成正比，其余同距离拓扑视图。</li>
+                </ul>
+              </ul>
+              <li>左侧边栏</li>
+              <ul class="intro-text">
+                <li>介绍：你正在读的这个东西。</li>
+                <li>过滤器：用于筛选站点和线路。</li>
+                <li>参数：用于显示并编辑站点或铁路路段信息。</li>
+              </ul>
+              <li>右侧边栏</li>
+              <ul class="intro-text">
+                <li>哦不，还没写。</li>
+              </ul>
+            </ul>
+          `;
+            this.sidePanelContent.innerHTML = introContent;
             this.contentOnShow = "intro";
           } else if (button.id === "btn-filter") {
             this.sidePanelTitle.innerText = "过滤器";
@@ -84,7 +127,8 @@ export class LeftSidePanel {
             this.contentOnShow = "filter";
           } else if (button.id === "btn-params") {
             this.sidePanelTitle.innerText = "参数";
-            this.sidePanelContent.innerHTML = "<p>这是参数内容。</p>";
+            this.sidePanelContent.innerHTML =
+              "<p>在任意视图中点击选择点或边，以显示并编辑站点或铁路路段信息。</p>";
             this.contentOnShow = "params";
           }
 

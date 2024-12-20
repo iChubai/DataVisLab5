@@ -54,8 +54,8 @@
   background-color: #f0f0f0;
   border-left: 2px solid #ccc;
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-  overflow-y: auto;
-  padding: 10px;
+  /*左右和上方各留出10px，下方0px*/
+  padding: 0 10px 0 10px;
   display: flex;
   flex-direction: column;
 }
@@ -76,10 +76,16 @@
   display: none;
 }
 
+#sidePanelContent {
+  max-height: 100%;
+  padding: 10px;
+  overflow-y: auto;
+}
+
 /* 拖拽控件的外层容器 */
 .draggerParentHorizontal {
   position: absolute;
-  right: 8px; /* 向右侧延伸，适配拖拽控件 */
+  right: 4px; /* 向右侧延伸，适配拖拽控件 */
   top: 0;
   bottom: 0;
   width: 16px; /* 拖拽控件的宽度 */
@@ -92,7 +98,12 @@
   position: absolute;
   top: 48%;
   right: 0px;
-  width: 8px;
+  width: 6px;
   height: 4%;
   background-color: #3a3a3a;
+  border-radius: 2px;
+}
+
+.intro-text {
+  font-size: 12px;
 }
