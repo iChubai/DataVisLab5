@@ -82,6 +82,17 @@ export class GraphContext {
     graphEventManager.on("EdgeAdded", (id: string) => {
       const [sourceId, targetId] = id.split("->");
       const distance = this.graph.getEdgeById(id)!.length * (this.model === "distance" ? 1 : 3);
+
+      const edgeData =
+        this.ctx.data.adjacencyTable()[sourceId][targetId] ??
+        this.ctx.data.adjacencyTable()[targetId][sourceId];
+      if (!edgeData) {
+        this.ctx.data.adjacencyTable()[sourceId][targetId] = {
+          id,
+          name: id,
+          params: [distance, 3 * distance, 0],
+        };
+      }
       this.ctx.data.adjacencyTable()[sourceId][targetId].params = [distance, 3 * distance, 0];
     });
 
@@ -156,7 +167,7 @@ export class GraphContext {
 
     this.loadNodes();
     this.loadEdges(model);
-    this.simulator = new ForceSimulator(this.graph, this.g, this.canvasEventManager);
+    this.simulator = new ForceSimulator(this, this.graph, this.g, this.canvasEventManager);
 
     this.graph.registerCallbacks(this.canvasEventManager);
     this.simulator.registerCallbacks(this.graphEventManager);
@@ -168,5 +179,9 @@ export class GraphContext {
   public render(): void {
     this.svg.call(this.zoom as any);
     this.svg.call(this.zoom.transform, d3.zoomTransform(this.svg.node()));
+  }
+
+  public exploreParams(dataCategory: string, id: string): void {
+    return this.ctx.exploreParams(dataCategory, id);
   }
 }

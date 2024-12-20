@@ -2,6 +2,8 @@ import * as d3 from "d3";
 import { Graph, Node, Edge } from "../Basic/Graph";
 import { CanvasEventManager } from "./EventManager";
 import { GraphEventManager } from "../Basic/EventManager";
+import { Names } from "../../Names";
+import { GraphContext } from "../GraphContext";
 
 // 定义常量
 const NODE_DEFAULT_RADIUS = 5; // 节点的默认半径
@@ -21,6 +23,7 @@ export class ForceSimulator {
   private dragTarget: { x: number; y: number } | null = null; // 鼠标拖拽目标位置
 
   constructor(
+    private ctx: GraphContext,
     private graph: Graph,
     private canvas: d3.Selection<SVGSVGElement, unknown, null, undefined>,
     private canvasEventManager: CanvasEventManager
@@ -119,17 +122,16 @@ export class ForceSimulator {
       .on("mouseout", (event, d: any) => {
         d3.select(event.target).attr("fill", "steelblue");
         d.hoved = false;
-      }) // 设置鼠标移出节点时恢复
-      // .on("dragstart", (event, node) => {
-      //   d3.select(event.target).attr("fill", "skyblue");
-      // }) // 设置节点开始拖拽时变色
-      // .on("dragend", (event, node) => {
-      //   d3.select(event.target).attr("fill", "steelblue");
-      // }) // 设置节点结束拖拽时恢复
-      // NOTE: 此处定义的拖拽事件似乎会被`applyDragBehavior`覆盖。
+      })
+      .on("click", (event: MouseEvent, d: any) => {
+        this.canvasEventManager.trigger("NodeClicked", { event, id: d._id });
+
+        // 阻止事件传播
+        console.log("[ForceSimulator] clicked node: ", d);
+        this.ctx.exploreParams(Names.DataCategory_Station, d._id);
+      })
       .call((enter) => {
         this.applyDragBehavior(enter);
-        this.applyClickBehavior(enter);
       });
 
     node.exit().remove();
@@ -167,7 +169,13 @@ export class ForceSimulator {
       .on("mouseout", (event, d: any) => {
         d.hoved = false;
         d3.select(event.target).attr("stroke", "transparent");
-      }); // 设置鼠标移出边时恢复
+      }) // 设置鼠标移出边时恢复
+      .on("click", (event: MouseEvent, d: any) => {
+        // 阻止事件传播
+        event.stopPropagation();
+        console.log("[ForceSimulator] clicked line: ", d);
+        this.ctx.exploreParams(Names.DataCategory_Track, d._id);
+      });
 
     edgePath.attr("d", (d) => {
       const source = this.graph.getNodeById(d.source);
@@ -184,7 +192,17 @@ export class ForceSimulator {
       .selectAll<SVGLineElement, Edge>("line")
       .data(this.graph.getEdges(), (d: Edge) => `${d.source}-${d.target}`);
 
-    link.enter().append("line").attr("stroke", "gray").attr("stroke-width", 1);
+    link
+      .enter()
+      .append("line")
+      .attr("stroke", "gray")
+      .attr("stroke-width", 1)
+      .on("click", (event: MouseEvent, d: any) => {
+        // 阻止事件传播
+        event.stopPropagation();
+        console.log("[ForceSimulator] clicked line: ", d);
+        this.ctx.exploreParams(Names.DataCategory_Track, d._id);
+      });
 
     link.exit().remove();
 
@@ -259,12 +277,6 @@ export class ForceSimulator {
     this.draggedNode = null;
     this.dragTarget = null;
     this.simulation.alphaTarget(0);
-  }
-
-  private applyClickBehavior(nodeSelection: d3.Selection<SVGCircleElement, Node, any, any>): void {
-    nodeSelection.on("click", (event, node) => {
-      this.canvasEventManager.trigger("NodeClicked", { event, id: node._id });
-    });
   }
 
   private findNodeUnderPlace(x: number, y: number): Node | null {
